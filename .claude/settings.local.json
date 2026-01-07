@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/taehj/OneDrive/Desktop/Book/한빛-혼공AI/혼공바이브코딩/**)",
+      "Read(~/JWS/PyCharm/vibecoding/**)",
       "Bash(git init:*)",
       "Bash(git config:*)",
       "Bash(git add:*)"

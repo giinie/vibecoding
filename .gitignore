@@ -69,3 +69,6 @@ tmp/
 
 # Local only
 정오표.xlsx
+
+# User Custom
+uv.lock
