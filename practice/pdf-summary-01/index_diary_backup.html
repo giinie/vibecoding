@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 공감 다이어리 💝</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffecd2 100%);
+      background-attachment: fixed;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 30px 0;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      color: #8b5a5a;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #a07070;
+      font-size: 1rem;
+    }
+
+    /* Date Display */
+    .date-display {
+      text-align: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 1s ease;
+    }
+
+    .date-display .date {
+      font-size: 1.3rem;
+      color: #8b5a5a;
+      font-weight: 600;
+    }
+
+    .date-display .greeting {
+      font-size: 0.9rem;
+      color: #a07070;
+      margin-top: 5px;
+    }
+
+    /* Diary Card */
+    .diary-card {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 25px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(139, 90, 90, 0.15);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .diary-card h2 {
+      color: #8b5a5a;
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Textarea */
+    .diary-input {
+      width: 100%;
+      min-height: 120px;
+      padding: 20px;
+      border: 2px solid #f5d6d6;
+      border-radius: 15px;
+      font-size: 1.1rem;
+      resize: vertical;
+      background: linear-gradient(to bottom, #fff9f9, #fff);
+      color: #5a4a4a;
+      transition: all 0.3s ease;
+    }
+
+    .diary-input:focus {
+      outline: none;
+      border-color: #e8a0a0;
+      box-shadow: 0 0 20px rgba(232, 160, 160, 0.3);
+    }
+
+    .diary-input::placeholder {
+      color: #c4a0a0;
+    }
+
+    /* Character Count */
+    .char-count {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #b08080;
+      margin-top: 8px;
+      margin-bottom: 15px;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #e8a0a0 0%, #d4847f 100%);
+      border: none;
+      border-radius: 15px;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(212, 132, 127, 0.4);
+    }
+
+    .submit-btn:disabled {
+      background: #d4c4c4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .loading-text {
+      color: #8b5a5a;
+      font-size: 1rem;
+      margin-top: 15px;
+    }
+
+    .loading-dots {
+      display: inline-flex;
+      gap: 8px;
+    }
+
+    .loading-dots span {
+      width: 12px;
+      height: 12px;
+      background: #e8a0a0;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* Response Card */
+    .response-card {
+      display: none;
+      background: linear-gradient(135deg, #fff9f5 0%, #fff5f0 100%);
+      border-radius: 25px;
+      padding: 30px;
+      margin-top: 20px;
+      box-shadow: 0 10px 40px rgba(139, 90, 90, 0.15);
+      border: 2px solid #f5e0dc;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .response-card.show {
+      display: block;
+    }
+
+    .response-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px dashed #f5d6d6;
+    }
+
+    .response-header h3 {
+      color: #8b5a5a;
+      font-size: 1.2rem;
+    }
+
+    .response-content {
+      color: #5a4a4a;
+      font-size: 1.05rem;
+      white-space: pre-wrap;
+      line-height: 1.8;
+    }
+
+    .response-timestamp {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #b08080;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #f5d6d6;
+    }
+
+    /* History Section */
+    .history-section {
+      margin-top: 30px;
+    }
+
+    .history-title {
+      color: #8b5a5a;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 15px;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      border-left: 4px solid #e8a0a0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .history-item:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateX(5px);
+    }
+
+    .history-date {
+      font-size: 0.85rem;
+      color: #a07070;
+      margin-bottom: 5px;
+    }
+
+    .history-preview {
+      color: #5a4a4a;
+      font-size: 0.95rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Error Message */
+    .error-message {
+      display: none;
+      background: #ffe0e0;
+      color: #c45050;
+      padding: 15px 20px;
+      border-radius: 15px;
+      margin-top: 15px;
+      text-align: center;
+      animation: shake 0.5s ease;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    /* Clear History Button */
+    .clear-history-btn {
+      background: none;
+      border: 1px solid #d4a0a0;
+      color: #a07070;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: auto;
+    }
+
+    .clear-history-btn:hover {
+      background: #f5e0e0;
+      color: #8b5a5a;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 30px;
+      color: #a07070;
+      font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .diary-card, .response-card {
+        padding: 20px;
+      }
+
+      .diary-input {
+        font-size: 1rem;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>AI 공감 다이어리 💝</h1>
+      <p>오늘 하루, 어떤 일이 있었나요?</p>
+    </header>
+
+    <!-- Date Display -->
+    <div class="date-display">
+      <div class="date" id="currentDate"></div>
+      <div class="greeting" id="greeting"></div>
+    </div>
+
+    <!-- Diary Input Card -->
+    <div class="diary-card">
+      <h2>📝 오늘의 한 줄</h2>
+      <textarea
+        class="diary-input"
+        id="diaryInput"
+        placeholder="오늘 있었던 일을 자유롭게 적어주세요...&#10;기쁜 일, 슬픈 일, 화나는 일, 뭐든 괜찮아요 💕"
+        maxlength="500"
+      ></textarea>
+      <div class="char-count"><span id="charCount">0</span> / 500</div>
+      <button class="submit-btn" id="submitBtn" disabled>
+        <span>💌</span>
+        <span>AI에게 마음 전하기</span>
+      </button>
+      <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="loading-text">AI가 당신의 마음을 읽고 있어요...</p>
+    </div>
+
+    <!-- Response Card -->
+    <div class="response-card" id="responseCard">
+      <div class="response-header">
+        <span style="font-size: 1.5rem;">🤗</span>
+        <h3>AI의 따뜻한 공감</h3>
+      </div>
+      <div class="response-content" id="responseContent"></div>
+      <div class="response-timestamp" id="responseTimestamp"></div>
+    </div>
+
+    <!-- History Section -->
+    <div class="history-section" id="historySection" style="display: none;">
+      <div style="display: flex; align-items: center;">
+        <h3 class="history-title">📚 지난 기록</h3>
+        <button class="clear-history-btn" id="clearHistoryBtn">기록 삭제</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>오늘도 수고했어요. 당신은 충분히 잘하고 있어요 ✨</p>
+    </footer>
+  </div>
+
+  <script>
+    // DOM Elements
+    const diaryInput = document.getElementById('diaryInput');
+    const charCount = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const responseCard = document.getElementById('responseCard');
+    const responseContent = document.getElementById('responseContent');
+    const responseTimestamp = document.getElementById('responseTimestamp');
+    const errorMessage = document.getElementById('errorMessage');
+    const currentDateEl = document.getElementById('currentDate');
+    const greetingEl = document.getElementById('greeting');
+    const historySection = document.getElementById('historySection');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    // Initialize date and greeting
+    function initDateTime() {
+      const now = new Date();
+      const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      };
+      currentDateEl.textContent = now.toLocaleDateString('ko-KR', options);
+
+      const hour = now.getHours();
+      let greeting = '';
+      if (hour >= 5 && hour < 12) {
+        greeting = '좋은 아침이에요! 오늘 하루도 파이팅 🌅';
+      } else if (hour >= 12 && hour < 17) {
+        greeting = '점심은 맛있게 드셨나요? 🌞';
+      } else if (hour >= 17 && hour < 21) {
+        greeting = '오늘 하루 수고 많았어요 🌆';
+      } else {
+        greeting = '편안한 밤 되세요 🌙';
+      }
+      greetingEl.textContent = greeting;
+    }
+
+    // Character count
+    diaryInput.addEventListener('input', () => {
+      const length = diaryInput.value.length;
+      charCount.textContent = length;
+      submitBtn.disabled = length === 0;
+    });
+
+    // Submit handler
+    submitBtn.addEventListener('click', async () => {
+      const entry = diaryInput.value.trim();
+      if (!entry) return;
+
+      // Hide previous response and error
+      responseCard.classList.remove('show');
+      errorMessage.classList.remove('show');
+
+      // Show loading
+      loading.classList.add('show');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/diary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ diaryEntry: entry })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || '오류가 발생했습니다.');
+        }
+
+        // Show response
+        responseContent.textContent = data.response;
+        const timestamp = new Date(data.timestamp);
+        responseTimestamp.textContent = timestamp.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        }) + '에 기록됨';
+
+        responseCard.classList.add('show');
+
+        // Save to history
+        saveToHistory(entry, data.response, data.timestamp);
+        loadHistory();
+
+      } catch (error) {
+        console.error('Error:', error);
+        errorMessage.textContent = error.message || '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.';
+        errorMessage.classList.add('show');
+      } finally {
+        loading.classList.remove('show');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Local Storage History
+    function saveToHistory(entry, response, timestamp) {
+      const history = JSON.parse(localStorage.getItem('diaryHistory') || '[]');
+      history.unshift({
+        entry,
+        response,
+        timestamp
+      });
+      // Keep only last 10 entries
+      if (history.length > 10) {
+        history.pop();
+      }
+      localStorage.setItem('diaryHistory', JSON.stringify(history));
+    }
+
+    // Safe DOM creation for history items
+    function createHistoryItem(item) {
+      const date = new Date(item.timestamp);
+      const dateStr = date.toLocaleDateString('ko-KR', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+
+      const dateDiv = document.createElement('div');
+      dateDiv.className = 'history-date';
+      dateDiv.textContent = dateStr;
+
+      const previewDiv = document.createElement('div');
+      previewDiv.className = 'history-preview';
+      previewDiv.textContent = item.entry;
+
+      historyItem.appendChild(dateDiv);
+      historyItem.appendChild(previewDiv);
+
+      historyItem.addEventListener('click', () => {
+        responseContent.textContent = item.response;
+        responseTimestamp.textContent = dateStr + '에 기록됨';
+        responseCard.classList.add('show');
+        responseCard.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      return historyItem;
+    }
+
+    function loadHistory() {
+      const history = JSON.parse(localStorage.getItem('diaryHistory') || '[]');
+
+      if (history.length === 0) {
+        historySection.style.display = 'none';
+        return;
+      }
+
+      historySection.style.display = 'block';
+
+      // Clear existing items safely
+      while (historyList.firstChild) {
+        historyList.removeChild(historyList.firstChild);
+      }
+
+      history.forEach((item) => {
+        const historyItem = createHistoryItem(item);
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    // Clear history
+    clearHistoryBtn.addEventListener('click', () => {
+      if (confirm('모든 기록을 삭제할까요?')) {
+        localStorage.removeItem('diaryHistory');
+        loadHistory();
+        responseCard.classList.remove('show');
+      }
+    });
+
+    // Enter key to submit (with Ctrl/Cmd)
+    diaryInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        submitBtn.click();
+      }
+    });
+
+    // Initialize
+    initDateTime();
+    loadHistory();
+  </script>
+</body>
+</html>
