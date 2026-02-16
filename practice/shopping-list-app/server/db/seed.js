@@ -1,6 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcryptjs');
 const { getDatabase, closeDatabase } = require('./connection');
 const { migrate } = require('./migrate');
+
+const DEFAULT_PASSWORD = 'password123';
+const passwordHash = bcrypt.hashSync(DEFAULT_PASSWORD, 10);
 
 const SAMPLE_USERS = [
   { id: uuidv4(), name: 'Alice', email: 'alice@example.com' },
@@ -15,7 +19,7 @@ function seed() {
 
   try {
     const insertUser = db.prepare(
-      'INSERT OR IGNORE INTO users (id, name, email) VALUES (?, ?, ?)'
+      'INSERT OR IGNORE INTO users (id, name, email, password_hash) VALUES (?, ?, ?, ?)'
     );
 
     const insertNotification = db.prepare(
@@ -24,7 +28,7 @@ function seed() {
 
     const seedTransaction = db.transaction(() => {
       for (const user of SAMPLE_USERS) {
-        insertUser.run(user.id, user.name, user.email);
+        insertUser.run(user.id, user.name, user.email, passwordHash);
       }
 
       const notifications = [
@@ -77,6 +81,7 @@ function seed() {
 
     seedTransaction();
     console.log(`Seeded ${SAMPLE_USERS.length} users and 4 notifications.`);
+    console.log(`Default password for all users: ${DEFAULT_PASSWORD}`);
   } catch (err) {
     console.error('Seeding failed:', err.message);
     process.exit(1);

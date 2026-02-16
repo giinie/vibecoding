@@ -10,14 +10,19 @@ function initializeSocket(httpServer) {
     },
   });
 
+  io.use((socket, next) => {
+    const userId = socket.handshake.query.userId;
+    if (!userId) {
+      return next(new Error('Authentication required'));
+    }
+    next();
+  });
+
   io.on('connection', (socket) => {
     const userId = socket.handshake.query.userId;
-
-    if (userId) {
-      const room = `user:${userId}`;
-      socket.join(room);
-      console.log(`User ${userId} connected (socket: ${socket.id})`);
-    }
+    const room = `user:${userId}`;
+    socket.join(room);
+    console.log(`User ${userId} connected (socket: ${socket.id})`);
 
     socket.on('disconnect', () => {
       console.log(`Socket ${socket.id} disconnected`);

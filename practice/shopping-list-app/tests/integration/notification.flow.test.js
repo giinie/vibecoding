@@ -1,5 +1,5 @@
 const { io: ioClient } = require('socket.io-client');
-const { setupTestDatabase, seedTestUser, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
 const { createTestServer, startTestServer, stopTestServer } = require('../helpers/testServer');
 
 let server;
@@ -47,19 +47,23 @@ beforeEach(() => {
 describe('Full notification flow', () => {
   it('create notification -> receive via WebSocket -> mark as read -> verify in list', async () => {
     const user = seedTestUser('flow-user-1', 'Flow User', 'flow@test.com');
+    const token = getTestToken(user.id);
     const client = await connectClient(user.id);
 
     // Step 1: Listen for the WebSocket event
     const wsPromise = waitForEvent(client, 'notification:new');
 
     // Step 2: Create a notification via API
-    const createRes = await agent.post('/api/notifications').send({
-      user_id: user.id,
-      type: 'item_added',
-      title: 'Milk added',
-      message: 'Milk was added to your shopping list',
-      metadata: { itemName: 'Milk' },
-    });
+    const createRes = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: user.id,
+        type: 'item_added',
+        title: 'Milk added',
+        message: 'Milk was added to your shopping list',
+        metadata: { itemName: 'Milk' },
+      });
     expect(createRes.status).toBe(201);
     const notificationId = createRes.body.id;
 
@@ -69,14 +73,18 @@ describe('Full notification flow', () => {
     expect(wsData.type).toBe('item_added');
 
     // Step 4: Verify notification appears in the list as unread
-    const listRes1 = await agent.get(`/api/notifications/${user.id}`);
+    const listRes1 = await agent
+      .get(`/api/notifications/${user.id}`)
+      .set('Authorization', `Bearer ${token}`);
     expect(listRes1.body.notifications).toHaveLength(1);
     expect(listRes1.body.unread_count).toBe(1);
     expect(listRes1.body.notifications[0].is_read).toBe(0);
 
     // Step 5: Mark the notification as read
     const readPromise = waitForEvent(client, 'notification:read');
-    const readRes = await agent.patch(`/api/notifications/${notificationId}/read`);
+    const readRes = await agent
+      .patch(`/api/notifications/${notificationId}/read`)
+      .set('Authorization', `Bearer ${token}`);
     expect(readRes.status).toBe(200);
     expect(readRes.body.is_read).toBe(1);
 
@@ -85,7 +93,9 @@ describe('Full notification flow', () => {
     expect(readData.id).toBe(notificationId);
 
     // Step 7: Verify notification is now marked as read in the list
-    const listRes2 = await agent.get(`/api/notifications/${user.id}`);
+    const listRes2 = await agent
+      .get(`/api/notifications/${user.id}`)
+      .set('Authorization', `Bearer ${token}`);
     expect(listRes2.body.unread_count).toBe(0);
     expect(listRes2.body.notifications[0].is_read).toBe(1);
 
@@ -97,6 +107,8 @@ describe('Multi-user isolation', () => {
   it('notifications are isolated per user', async () => {
     const alice = seedTestUser('alice-1', 'Alice', 'alice@test.com');
     const bob = seedTestUser('bob-1', 'Bob', 'bob@test.com');
+    const aliceToken = getTestToken(alice.id);
+    const bobToken = getTestToken(bob.id);
 
     const aliceClient = await connectClient(alice.id);
     const bobClient = await connectClient(bob.id);
@@ -108,26 +120,35 @@ describe('Multi-user isolation', () => {
     bobClient.on('notification:new', (data) => bobNotifications.push(data));
 
     // Create notifications for Alice
-    await agent.post('/api/notifications').send({
-      user_id: alice.id,
-      type: 'item_added',
-      title: 'Alice item 1',
-      message: 'For Alice only',
-    });
-    await agent.post('/api/notifications').send({
-      user_id: alice.id,
-      type: 'reminder',
-      title: 'Alice reminder',
-      message: 'Alice reminder msg',
-    });
+    await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${aliceToken}`)
+      .send({
+        user_id: alice.id,
+        type: 'item_added',
+        title: 'Alice item 1',
+        message: 'For Alice only',
+      });
+    await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${aliceToken}`)
+      .send({
+        user_id: alice.id,
+        type: 'reminder',
+        title: 'Alice reminder',
+        message: 'Alice reminder msg',
+      });
 
     // Create notification for Bob
-    await agent.post('/api/notifications').send({
-      user_id: bob.id,
-      type: 'list_shared',
-      title: 'Bob shared list',
-      message: 'For Bob only',
-    });
+    await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${bobToken}`)
+      .send({
+        user_id: bob.id,
+        type: 'list_shared',
+        title: 'Bob shared list',
+        message: 'For Bob only',
+      });
 
     // Wait for events to propagate
     await new Promise((r) => setTimeout(r, 300));
@@ -139,8 +160,12 @@ describe('Multi-user isolation', () => {
     expect(bobNotifications.every((n) => n.user_id === bob.id)).toBe(true);
 
     // Verify API isolation
-    const aliceList = await agent.get(`/api/notifications/${alice.id}`);
-    const bobList = await agent.get(`/api/notifications/${bob.id}`);
+    const aliceList = await agent
+      .get(`/api/notifications/${alice.id}`)
+      .set('Authorization', `Bearer ${aliceToken}`);
+    const bobList = await agent
+      .get(`/api/notifications/${bob.id}`)
+      .set('Authorization', `Bearer ${bobToken}`);
 
     expect(aliceList.body.notifications).toHaveLength(2);
     expect(bobList.body.notifications).toHaveLength(1);

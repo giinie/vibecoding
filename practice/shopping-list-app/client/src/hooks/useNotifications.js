@@ -20,13 +20,14 @@ export default function useNotifications(userId = 'user-1') {
       setError(null);
 
       const data = await api.fetchNotifications(userId, {
-        page: pageNum,
+        offset: (pageNum - 1) * ITEMS_PER_PAGE,
         limit: ITEMS_PER_PAGE,
       });
 
       setNotifications(prev =>
         append ? [...prev, ...data.notifications] : data.notifications
       );
+      setUnreadCount(data.unread_count);
       setHasMore(pageNum * ITEMS_PER_PAGE < data.total);
     } catch (err) {
       setError(err.message);
@@ -45,7 +46,13 @@ export default function useNotifications(userId = 'user-1') {
     try {
       await api.markAsRead(id);
       setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, isRead: true, is_read: 1 } : n))
+        prev.map(n => {
+          if (n.id === id && !n.isRead) {
+            setUnreadCount(c => Math.max(0, c - 1));
+            return { ...n, isRead: true };
+          }
+          return n;
+        })
       );
     } catch (err) {
       setError(err.message);
@@ -55,7 +62,7 @@ export default function useNotifications(userId = 'user-1') {
   const markAllAsRead = useCallback(async () => {
     try {
       await api.markAllAsRead(userId);
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, is_read: 1 })));
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
       setError(err.message);
@@ -65,7 +72,13 @@ export default function useNotifications(userId = 'user-1') {
   const removeNotification = useCallback(async (id) => {
     try {
       await api.deleteNotification(id);
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications(prev => {
+        const target = prev.find(n => n.id === id);
+        if (target && !target.isRead) {
+          setUnreadCount(c => Math.max(0, c - 1));
+        }
+        return prev.filter(n => n.id !== id);
+      });
     } catch (err) {
       setError(err.message);
     }
@@ -80,26 +93,27 @@ export default function useNotifications(userId = 'user-1') {
     loadNotifications(1);
   }, [loadNotifications]);
 
-  // Derive unread count from notifications state
-  useEffect(() => {
-    const count = notifications.filter(n => !n.isRead && !n.is_read).length;
-    setUnreadCount(count);
-  }, [notifications]);
-
   // Real-time WebSocket event listeners
   useEffect(() => {
     const unsubNew = onNewNotification((notification) => {
-      addNotification(notification);
+      addNotification(api.transformNotification(notification));
+      setUnreadCount(prev => prev + 1);
     });
 
     const unsubRead = onNotificationRead(({ id }) => {
       setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, isRead: true, is_read: 1 } : n))
+        prev.map(n => {
+          if (n.id === id && !n.isRead) {
+            setUnreadCount(c => Math.max(0, c - 1));
+            return { ...n, isRead: true };
+          }
+          return n;
+        })
       );
     });
 
     const unsubReadAll = onAllNotificationsRead(() => {
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, is_read: 1 })));
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     });
 

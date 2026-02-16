@@ -16,6 +16,10 @@ const notificationController = {
         });
       }
 
+      if (user_id !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden: cannot create notifications for another user' });
+      }
+
       const notification = notificationModel.create({
         user_id,
         type,
@@ -62,12 +66,17 @@ const notificationController = {
   markAsRead(req, res) {
     try {
       const { id } = req.params;
-      const notification = notificationModel.markAsRead(id);
+      const existing = notificationModel.findById(id);
 
-      if (!notification) {
+      if (!existing) {
         return res.status(404).json({ error: 'Notification not found' });
       }
 
+      if (existing.user_id !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden: notification does not belong to user' });
+      }
+
+      const notification = notificationModel.markAsRead(id);
       emitNotificationRead(notification.user_id, id);
 
       return res.json(notification);
@@ -92,11 +101,17 @@ const notificationController = {
   delete(req, res) {
     try {
       const { id } = req.params;
-      const deleted = notificationModel.delete(id);
+      const existing = notificationModel.findById(id);
 
-      if (!deleted) {
+      if (!existing) {
         return res.status(404).json({ error: 'Notification not found' });
       }
+
+      if (existing.user_id !== req.userId) {
+        return res.status(403).json({ error: 'Forbidden: notification does not belong to user' });
+      }
+
+      notificationModel.delete(id);
 
       return res.status(204).send();
     } catch (err) {

@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const { migrate } = require('./db/migrate');
 const { initializeSocket } = require('./websocket/socketManager');
+const authRoutes = require('./routes/auth');
 const notificationRoutes = require('./routes/notifications');
 
 const app = express();
@@ -17,6 +19,7 @@ app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Health check

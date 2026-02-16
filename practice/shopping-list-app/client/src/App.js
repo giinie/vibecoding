@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SocketProvider } from './context/SocketContext';
 import NotificationBell from './components/NotificationBell';
 import NotificationList from './components/NotificationList';
 import useNotifications from './hooks/useNotifications';
+import { login } from './services/authApi';
 import './App.css';
 import './styles/notifications.css';
 
-const USER_ID = 'user-1';
-
-function AppContent() {
+function AppContent({ userId }) {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const {
     notifications,
@@ -19,7 +18,7 @@ function AppContent() {
     markAsRead,
     markAllAsRead,
     removeNotification,
-  } = useNotifications(USER_ID);
+  } = useNotifications(userId);
 
   if (showAllNotifications) {
     return (
@@ -67,9 +66,46 @@ function AppContent() {
 }
 
 export default function App() {
+  const [userId, setUserId] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    login('alice@example.com', 'password123')
+      .then((data) => {
+        setUserId(data.user.id);
+      })
+      .catch((err) => {
+        setAuthError(err.message);
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="app">
+        <main className="app-main">
+          <p>로그인 중...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="app">
+        <main className="app-main">
+          <p>로그인 실패: {authError}</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <SocketProvider userId={USER_ID}>
-      <AppContent />
+    <SocketProvider userId={userId}>
+      <AppContent userId={userId} />
     </SocketProvider>
   );
 }

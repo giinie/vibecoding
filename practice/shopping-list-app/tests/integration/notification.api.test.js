@@ -1,9 +1,10 @@
-const { setupTestDatabase, seedTestUser, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
 const { createTestServer, stopTestServer } = require('../helpers/testServer');
 
 let agent;
 let server;
 let testUser;
+let token;
 
 beforeAll(() => {
   setupTestDatabase();
@@ -20,6 +21,7 @@ afterAll(async () => {
 beforeEach(() => {
   clearTestData();
   testUser = seedTestUser('user-1', 'Alice', 'alice@test.com');
+  token = getTestToken(testUser.id);
 });
 
 describe('POST /api/notifications', () => {
@@ -31,7 +33,10 @@ describe('POST /api/notifications', () => {
       message: 'Milk was added to your list',
     };
 
-    const res = await agent.post('/api/notifications').send(payload);
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send(payload);
 
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
@@ -48,7 +53,10 @@ describe('POST /api/notifications', () => {
   it('returns 400 for missing required fields', async () => {
     const payload = { user_id: testUser.id };
 
-    const res = await agent.post('/api/notifications').send(payload);
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send(payload);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/missing required fields/i);
@@ -62,7 +70,10 @@ describe('POST /api/notifications', () => {
       message: 'Test message',
     };
 
-    const res = await agent.post('/api/notifications').send(payload);
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send(payload);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/invalid notification type/i);
@@ -77,7 +88,10 @@ describe('POST /api/notifications', () => {
       metadata: { itemName: 'Milk', listId: 'list-1' },
     };
 
-    const res = await agent.post('/api/notifications').send(payload);
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send(payload);
 
     expect(res.status).toBe(201);
     expect(res.body.metadata).toEqual({ itemName: 'Milk', listId: 'list-1' });
@@ -88,17 +102,22 @@ describe('GET /api/notifications/:userId', () => {
   beforeEach(async () => {
     // Seed multiple notifications
     for (let i = 0; i < 5; i++) {
-      await agent.post('/api/notifications').send({
-        user_id: testUser.id,
-        type: 'item_added',
-        title: `Notification ${i}`,
-        message: `Message ${i}`,
-      });
+      await agent
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          user_id: testUser.id,
+          type: 'item_added',
+          title: `Notification ${i}`,
+          message: `Message ${i}`,
+        });
     }
   });
 
   it('returns notifications for a user', async () => {
-    const res = await agent.get(`/api/notifications/${testUser.id}`);
+    const res = await agent
+      .get(`/api/notifications/${testUser.id}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.notifications).toHaveLength(5);
@@ -108,11 +127,17 @@ describe('GET /api/notifications/:userId', () => {
 
   it('filters unread notifications when unread_only=true', async () => {
     // Mark first notification as read
-    const listRes = await agent.get(`/api/notifications/${testUser.id}`);
+    const listRes = await agent
+      .get(`/api/notifications/${testUser.id}`)
+      .set('Authorization', `Bearer ${token}`);
     const firstId = listRes.body.notifications[0].id;
-    await agent.patch(`/api/notifications/${firstId}/read`);
+    await agent
+      .patch(`/api/notifications/${firstId}/read`)
+      .set('Authorization', `Bearer ${token}`);
 
-    const res = await agent.get(`/api/notifications/${testUser.id}?unread_only=true`);
+    const res = await agent
+      .get(`/api/notifications/${testUser.id}?unread_only=true`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.notifications).toHaveLength(4);
@@ -122,7 +147,9 @@ describe('GET /api/notifications/:userId', () => {
   });
 
   it('respects limit and offset', async () => {
-    const res = await agent.get(`/api/notifications/${testUser.id}?limit=2&offset=1`);
+    const res = await agent
+      .get(`/api/notifications/${testUser.id}?limit=2&offset=1`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.notifications).toHaveLength(2);
@@ -131,8 +158,11 @@ describe('GET /api/notifications/:userId', () => {
 
   it('returns empty array for user with no notifications', async () => {
     const otherUser = seedTestUser('user-empty', 'Empty', 'empty@test.com');
+    const otherToken = getTestToken(otherUser.id);
 
-    const res = await agent.get(`/api/notifications/${otherUser.id}`);
+    const res = await agent
+      .get(`/api/notifications/${otherUser.id}`)
+      .set('Authorization', `Bearer ${otherToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.notifications).toHaveLength(0);
@@ -144,17 +174,22 @@ describe('PATCH /api/notifications/:id/read', () => {
   let notificationId;
 
   beforeEach(async () => {
-    const res = await agent.post('/api/notifications').send({
-      user_id: testUser.id,
-      type: 'reminder',
-      title: 'Reminder',
-      message: 'Buy eggs',
-    });
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'reminder',
+        title: 'Reminder',
+        message: 'Buy eggs',
+      });
     notificationId = res.body.id;
   });
 
   it('marks a notification as read', async () => {
-    const res = await agent.patch(`/api/notifications/${notificationId}/read`);
+    const res = await agent
+      .patch(`/api/notifications/${notificationId}/read`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.is_read).toBe(1);
@@ -162,7 +197,9 @@ describe('PATCH /api/notifications/:id/read', () => {
   });
 
   it('returns 404 for non-existent notification', async () => {
-    const res = await agent.patch('/api/notifications/non-existent-id/read');
+    const res = await agent
+      .patch('/api/notifications/non-existent-id/read')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toMatch(/not found/i);
@@ -172,23 +209,30 @@ describe('PATCH /api/notifications/:id/read', () => {
 describe('PATCH /api/notifications/read-all/:userId', () => {
   beforeEach(async () => {
     for (let i = 0; i < 3; i++) {
-      await agent.post('/api/notifications').send({
-        user_id: testUser.id,
-        type: 'item_added',
-        title: `Item ${i}`,
-        message: `Message ${i}`,
-      });
+      await agent
+        .post('/api/notifications')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          user_id: testUser.id,
+          type: 'item_added',
+          title: `Item ${i}`,
+          message: `Message ${i}`,
+        });
     }
   });
 
   it('marks all notifications as read for a user', async () => {
-    const res = await agent.patch(`/api/notifications/read-all/${testUser.id}`);
+    const res = await agent
+      .patch(`/api/notifications/read-all/${testUser.id}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.updated_count).toBe(3);
 
     // Verify all are read
-    const listRes = await agent.get(`/api/notifications/${testUser.id}?unread_only=true`);
+    const listRes = await agent
+      .get(`/api/notifications/${testUser.id}?unread_only=true`)
+      .set('Authorization', `Bearer ${token}`);
     expect(listRes.body.notifications).toHaveLength(0);
     expect(listRes.body.unread_count).toBe(0);
   });
@@ -198,27 +242,36 @@ describe('DELETE /api/notifications/:id', () => {
   let notificationId;
 
   beforeEach(async () => {
-    const res = await agent.post('/api/notifications').send({
-      user_id: testUser.id,
-      type: 'list_shared',
-      title: 'Shared',
-      message: 'List shared with you',
-    });
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'list_shared',
+        title: 'Shared',
+        message: 'List shared with you',
+      });
     notificationId = res.body.id;
   });
 
   it('deletes a notification and returns 204', async () => {
-    const res = await agent.delete(`/api/notifications/${notificationId}`);
+    const res = await agent
+      .delete(`/api/notifications/${notificationId}`)
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(204);
 
     // Verify it's gone
-    const listRes = await agent.get(`/api/notifications/${testUser.id}`);
+    const listRes = await agent
+      .get(`/api/notifications/${testUser.id}`)
+      .set('Authorization', `Bearer ${token}`);
     expect(listRes.body.notifications).toHaveLength(0);
   });
 
   it('returns 404 for non-existent notification', async () => {
-    const res = await agent.delete('/api/notifications/non-existent-id');
+    const res = await agent
+      .delete('/api/notifications/non-existent-id')
+      .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toMatch(/not found/i);
