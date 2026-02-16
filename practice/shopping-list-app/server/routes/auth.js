@@ -23,16 +23,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be between 8 and 100 characters' });
     }
 
-    const existing = userModel.findByEmail(email);
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const existing = userModel.findByEmail(normalizedEmail);
     if (existing) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    const user = await userModel.create({ name, email, password });
+    const user = await userModel.create({ name, email: normalizedEmail, password });
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { algorithm: 'HS256', expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
     return res.status(201).json({ token, user });
@@ -49,7 +51,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: email, password' });
     }
 
-    const user = userModel.findByEmail(email);
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = userModel.findByEmail(normalizedEmail);
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -61,7 +65,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { algorithm: 'HS256', expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
     const { password_hash, ...safeUser } = user;

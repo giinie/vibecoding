@@ -98,6 +98,127 @@ describe('POST /api/notifications', () => {
   });
 });
 
+describe('POST /api/notifications - input validation', () => {
+  it('returns 400 for non-string title', async () => {
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'item_added',
+        title: 123,
+        message: 'Valid message',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/title/i);
+  });
+
+  it('returns 400 for title exceeding 255 chars', async () => {
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'item_added',
+        title: 'a'.repeat(256),
+        message: 'Valid message',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/title/i);
+  });
+
+  it('returns 400 for non-string message', async () => {
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'item_added',
+        title: 'Valid title',
+        message: 456,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/message/i);
+  });
+
+  it('returns 400 for message exceeding 2000 chars', async () => {
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'item_added',
+        title: 'Valid title',
+        message: 'a'.repeat(2001),
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/message/i);
+  });
+
+  it('returns 400 for invalid notification type at app level', async () => {
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: testUser.id,
+        type: 'invalid_type',
+        title: 'Test',
+        message: 'Test message',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid notification type/i);
+  });
+
+  it('returns 400 for non-UUID user_id in body', async () => {
+    const res = await agent
+      .post('/api/notifications')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        user_id: 'not-a-uuid',
+        type: 'item_added',
+        title: 'Test',
+        message: 'Test message',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/user_id/i);
+  });
+});
+
+describe('UUID validation', () => {
+  it('returns 400 for non-UUID userId param', async () => {
+    const res = await agent
+      .get('/api/notifications/not-a-valid-uuid')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid/i);
+  });
+
+  it('returns 400 for non-UUID id param on PATCH', async () => {
+    const res = await agent
+      .patch('/api/notifications/not-a-valid-uuid/read')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid/i);
+  });
+
+  it('returns 400 for non-UUID id param on DELETE', async () => {
+    const res = await agent
+      .delete('/api/notifications/not-a-valid-uuid')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid/i);
+  });
+});
+
 describe('GET /api/notifications/:userId', () => {
   beforeEach(async () => {
     // Seed multiple notifications

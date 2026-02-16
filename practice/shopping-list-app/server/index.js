@@ -23,6 +23,11 @@ const PORT = process.env.PORT || 3001;
 // Initialize Socket.io
 initializeSocket(server);
 
+// Trust proxy for rate limiter behind reverse proxy
+if (process.env.TRUST_PROXY) {
+  app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
+}
+
 // Security middleware
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
@@ -63,9 +68,9 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
-      : err.message,
+    error: process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'Internal server error',
   });
 });
 

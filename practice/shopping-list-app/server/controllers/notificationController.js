@@ -16,10 +16,22 @@ const notificationController = {
         });
       }
 
-      if (title.length > 255) {
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_REGEX.test(user_id)) {
+        return res.status(400).json({ error: 'Invalid user_id format' });
+      }
+
+      const VALID_TYPES = ['item_added', 'item_purchased', 'list_shared', 'reminder'];
+      if (!VALID_TYPES.includes(type)) {
+        return res.status(400).json({
+          error: 'Invalid notification type. Must be one of: item_added, item_purchased, list_shared, reminder',
+        });
+      }
+
+      if (typeof title !== 'string' || title.length > 255) {
         return res.status(400).json({ error: 'Title must be 255 characters or less' });
       }
-      if (message.length > 2000) {
+      if (typeof message !== 'string' || message.length > 2000) {
         return res.status(400).json({ error: 'Message must be 2000 characters or less' });
       }
       if (metadata && JSON.stringify(metadata).length > 10240) {

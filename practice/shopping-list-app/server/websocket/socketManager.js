@@ -17,7 +17,9 @@ function initializeSocket(httpServer) {
     const userId = socket.userId;
     const room = `user:${userId}`;
     socket.join(room);
-    console.log(`User ${userId} connected (socket: ${socket.id})`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`User ${userId} connected (socket: ${socket.id})`);
+    }
 
     socket.on('disconnect', () => {
       console.log(`Socket ${socket.id} disconnected`);

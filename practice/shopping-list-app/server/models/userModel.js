@@ -28,12 +28,16 @@ const userModel = {
   findByEmail(email) {
     const db = getDatabase();
     return db.prepare(
-      'SELECT id, name, email, password_hash, created_at FROM users WHERE email = ?'
+      'SELECT id, name, email, password_hash, created_at FROM users WHERE LOWER(email) = LOWER(?)'
     ).get(email) || null;
   },
 
   async verifyPassword(plain, hash) {
-    return bcrypt.compare(plain, hash);
+    try {
+      return await bcrypt.compare(plain, hash);
+    } catch {
+      return false;
+    }
   },
 };
 
