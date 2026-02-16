@@ -7,9 +7,10 @@ let agent;
 let port;
 
 function connectClient(userId) {
+  const token = getTestToken(userId);
   return new Promise((resolve) => {
     const client = ioClient(`http://localhost:${port}`, {
-      query: { userId },
+      auth: { token },
       transports: ['websocket'],
       forceNew: true,
     });

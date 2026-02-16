@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 let io = null;
 
@@ -11,15 +12,21 @@ function initializeSocket(httpServer) {
   });
 
   io.use((socket, next) => {
-    const userId = socket.handshake.query.userId;
-    if (!userId) {
+    const token = socket.handshake.auth.token;
+    if (!token) {
       return next(new Error('Authentication required'));
     }
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.userId = decoded.userId;
+      next();
+    } catch (err) {
+      return next(new Error('Invalid or expired token'));
+    }
   });
 
   io.on('connection', (socket) => {
-    const userId = socket.handshake.query.userId;
+    const userId = socket.userId;
     const room = `user:${userId}`;
     socket.join(room);
     console.log(`User ${userId} connected (socket: ${socket.id})`);

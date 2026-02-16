@@ -9,9 +9,10 @@ let testUser;
 let token;
 
 function connectClient(userId) {
+  const token = getTestToken(userId);
   return new Promise((resolve) => {
     const client = ioClient(`http://localhost:${port}`, {
-      query: { userId },
+      auth: { token },
       transports: ['websocket'],
       forceNew: true,
     });
@@ -49,7 +50,7 @@ beforeEach(() => {
 });
 
 describe('WebSocket authentication', () => {
-  it('rejects connection without userId', async () => {
+  it('rejects connection without token', async () => {
     const client = ioClient(`http://localhost:${port}`, {
       transports: ['websocket'],
       forceNew: true,
@@ -66,9 +67,9 @@ describe('WebSocket authentication', () => {
     client.disconnect();
   });
 
-  it('rejects connection with empty userId', async () => {
+  it('rejects connection with invalid token', async () => {
     const client = ioClient(`http://localhost:${port}`, {
-      query: { userId: '' },
+      auth: { token: 'invalid-token-value' },
       transports: ['websocket'],
       forceNew: true,
     });
@@ -79,12 +80,33 @@ describe('WebSocket authentication', () => {
       });
     });
 
-    expect(error.message).toMatch(/authentication required/i);
+    expect(error.message).toMatch(/invalid or expired token/i);
     expect(client.connected).toBe(false);
     client.disconnect();
   });
 
-  it('accepts connection with valid userId and joins room', async () => {
+  it('rejects connection with expired token', async () => {
+    const jwt = require('jsonwebtoken');
+    const expiredToken = jwt.sign({ userId: testUser.id }, process.env.JWT_SECRET, { expiresIn: '0s' });
+
+    const client = ioClient(`http://localhost:${port}`, {
+      auth: { token: expiredToken },
+      transports: ['websocket'],
+      forceNew: true,
+    });
+
+    const error = await new Promise((resolve) => {
+      client.on('connect_error', (err) => {
+        resolve(err);
+      });
+    });
+
+    expect(error.message).toMatch(/invalid or expired token/i);
+    expect(client.connected).toBe(false);
+    client.disconnect();
+  });
+
+  it('accepts connection with valid token and joins room', async () => {
     const client = await connectClient(testUser.id);
 
     expect(client.connected).toBe(true);

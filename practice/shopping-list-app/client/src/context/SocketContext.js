@@ -9,7 +9,7 @@ export function SocketProvider({ userId, children }) {
   useEffect(() => {
     if (!userId) return;
 
-    const socketInstance = connect(userId);
+    const socketInstance = connect();
     setSocket(socketInstance);
 
     return () => {

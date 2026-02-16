@@ -4,13 +4,15 @@ const SOCKET_URL = 'http://localhost:3001';
 
 let socket = null;
 
-export function connect(userId) {
+export function connect() {
   if (socket) {
     socket.disconnect();
   }
 
+  const token = localStorage.getItem('auth_token');
+
   socket = io(SOCKET_URL, {
-    query: { userId },
+    auth: { token },
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
