@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const supertest = require('supertest');
-const jwt = require('jsonwebtoken');
+const { createSocketAuthMiddleware } = require('../../server/websocket/socketAuthMiddleware');
 
 function createTestServer() {
   const app = express();
@@ -17,19 +17,7 @@ function createTestServer() {
   const socketManager = require('../../server/websocket/socketManager');
   socketManager.getIO = () => io;
 
-  io.use((socket, next) => {
-    const token = socket.handshake.auth.token;
-    if (!token) {
-      return next(new Error('Authentication required'));
-    }
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.userId = decoded.userId;
-      next();
-    } catch (err) {
-      return next(new Error('Invalid or expired token'));
-    }
-  });
+  io.use(createSocketAuthMiddleware());
 
   io.on('connection', (socket) => {
     const userId = socket.userId;

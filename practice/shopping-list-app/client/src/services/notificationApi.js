@@ -1,7 +1,9 @@
+import { TOKEN_KEY } from './authApi';
+
 const BASE_URL = 'http://localhost:3001/api';
 
 function authHeaders(extra = {}) {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem(TOKEN_KEY);
   return {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...extra,

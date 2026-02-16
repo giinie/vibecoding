@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { TOKEN_KEY } from './authApi';
 
 const SOCKET_URL = 'http://localhost:3001';
 
@@ -9,7 +10,7 @@ export function connect() {
     socket.disconnect();
   }
 
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem(TOKEN_KEY);
 
   socket = io(SOCKET_URL, {
     auth: { token },
@@ -24,6 +25,13 @@ export function connect() {
 
   socket.on('disconnect', (reason) => {
     console.log('Socket disconnected:', reason);
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('Socket connection error:', err.message);
+    if (err.message.includes('token') || err.message.includes('Authentication')) {
+      socket.disconnect();
+    }
   });
 
   return socket;

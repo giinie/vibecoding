@@ -1,5 +1,5 @@
 const BASE_URL = 'http://localhost:3001/api';
-const TOKEN_KEY = 'auth_token';
+export const TOKEN_KEY = 'auth_token';
 
 export async function login(email, password) {
   const response = await fetch(`${BASE_URL}/auth/login`, {
