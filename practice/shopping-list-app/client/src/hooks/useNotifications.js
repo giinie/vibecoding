@@ -4,7 +4,7 @@ import * as api from '../services/notificationApi';
 
 const ITEMS_PER_PAGE = 5;
 
-export default function useNotifications(userId = 'user-1') {
+export default function useNotifications(userId) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -15,6 +15,7 @@ export default function useNotifications(userId = 'user-1') {
   const { onNewNotification, onNotificationRead, onAllNotificationsRead } = useSocket();
 
   const loadNotifications = useCallback(async (pageNum = 1, append = false) => {
+    if (!userId) return;
     try {
       setLoading(true);
       setError(null);

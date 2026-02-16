@@ -9,8 +9,12 @@ export async function login(email, password) {
   });
 
   if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || '로그인에 실패했습니다.');
+    let errorMessage = '로그인에 실패했습니다.';
+    try {
+      const data = await response.json();
+      errorMessage = data.error || errorMessage;
+    } catch { /* non-JSON response */ }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -26,8 +30,12 @@ export async function register(name, email, password) {
   });
 
   if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || '회원가입에 실패했습니다.');
+    let errorMessage = '회원가입에 실패했습니다.';
+    try {
+      const data = await response.json();
+      errorMessage = data.error || errorMessage;
+    } catch { /* non-JSON response */ }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

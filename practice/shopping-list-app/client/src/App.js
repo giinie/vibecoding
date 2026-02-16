@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SocketProvider } from './context/SocketContext';
 import NotificationBell from './components/NotificationBell';
 import NotificationList from './components/NotificationList';
 import useNotifications from './hooks/useNotifications';
-import { login } from './services/authApi';
+import { login, logout } from './services/authApi';
+import { disconnect } from './services/socketService';
 import './App.css';
 import './styles/notifications.css';
 
-function AppContent({ userId }) {
+function AppContent({ userId, onLogout }) {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const {
     notifications,
     unreadCount,
     loading,
+    error,
     hasMore,
     loadMore,
     markAsRead,
@@ -25,8 +27,10 @@ function AppContent({ userId }) {
       <div className="app">
         <header className="app-header">
           <h1 className="app-header__title">쇼핑 리스트</h1>
+          <button className="app-header__logout" onClick={onLogout}>로그아웃</button>
         </header>
         <main className="app-main">
+          {error && <div className="app-error">{error}</div>}
           <NotificationList
             notifications={notifications}
             loading={loading}
@@ -54,9 +58,11 @@ function AppContent({ userId }) {
             onMarkAllAsRead={markAllAsRead}
             onViewAll={() => setShowAllNotifications(true)}
           />
+          <button className="app-header__logout" onClick={onLogout}>로그아웃</button>
         </div>
       </header>
       <main className="app-main">
+        {error && <div className="app-error">{error}</div>}
         <div className="app-placeholder">
           <p>장바구니 목록이 여기에 표시됩니다.</p>
         </div>
@@ -67,37 +73,62 @@ function AppContent({ userId }) {
 
 export default function App() {
   const [userId, setUserId] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  useEffect(() => {
-    login('alice@example.com', 'password123')
-      .then((data) => {
-        setUserId(data.user.id);
-      })
-      .catch((err) => {
-        setAuthError(err.message);
-      })
-      .finally(() => {
-        setAuthLoading(false);
-      });
-  }, []);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const data = await login(email, password);
+      setUserId(data.user.id);
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
-  if (authLoading) {
+  const handleLogout = () => {
+    logout();
+    disconnect();
+    setUserId(null);
+    setEmail('');
+    setPassword('');
+    setAuthError(null);
+  };
+
+  if (!userId) {
     return (
       <div className="app">
+        <header className="app-header">
+          <h1 className="app-header__title">쇼핑 리스트</h1>
+        </header>
         <main className="app-main">
-          <p>로그인 중...</p>
-        </main>
-      </div>
-    );
-  }
-
-  if (authError) {
-    return (
-      <div className="app">
-        <main className="app-main">
-          <p>로그인 실패: {authError}</p>
+          <form className="login-form" onSubmit={handleLogin}>
+            <h2>로그인</h2>
+            {authError && <div className="login-form__error">{authError}</div>}
+            <input
+              type="email"
+              placeholder="이메일"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button type="submit" disabled={authLoading}>
+              {authLoading ? '로그인 중...' : '로그인'}
+            </button>
+          </form>
         </main>
       </div>
     );
@@ -105,7 +136,7 @@ export default function App() {
 
   return (
     <SocketProvider userId={userId}>
-      <AppContent userId={userId} />
+      <AppContent userId={userId} onLogout={handleLogout} />
     </SocketProvider>
   );
 }

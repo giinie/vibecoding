@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe('Full notification flow', () => {
   it('create notification -> receive via WebSocket -> mark as read -> verify in list', async () => {
-    const user = seedTestUser('flow-user-1', 'Flow User', 'flow@test.com');
+    const user = seedTestUser('30000000-0000-4000-8000-000000000001', 'Flow User', 'flow@test.com');
     const token = getTestToken(user.id);
     const client = await connectClient(user.id);
 
@@ -106,8 +106,8 @@ describe('Full notification flow', () => {
 
 describe('Multi-user isolation', () => {
   it('notifications are isolated per user', async () => {
-    const alice = seedTestUser('alice-1', 'Alice', 'alice@test.com');
-    const bob = seedTestUser('bob-1', 'Bob', 'bob@test.com');
+    const alice = seedTestUser('30000000-0000-4000-8000-000000000002', 'Alice', 'alice@test.com');
+    const bob = seedTestUser('30000000-0000-4000-8000-000000000003', 'Bob', 'bob@test.com');
     const aliceToken = getTestToken(alice.id);
     const bobToken = getTestToken(bob.id);
 

@@ -62,6 +62,7 @@ function teardownTestDatabase() {
   delete require.cache[require.resolve('../../server/middleware/auth')];
   delete require.cache[require.resolve('../../server/routes/notifications')];
   delete require.cache[require.resolve('../../server/routes/auth')];
+  delete require.cache[require.resolve('../../server/middleware/validateUuid')];
   delete require.cache[require.resolve('../../server/websocket/socketManager')];
   delete require.cache[require.resolve('../../server/websocket/notificationEmitter')];
 }

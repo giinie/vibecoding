@@ -45,7 +45,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   clearTestData();
-  testUser = seedTestUser('ws-user-1', 'WS User', 'ws@test.com');
+  testUser = seedTestUser('40000000-0000-4000-8000-000000000001', 'WS User', 'ws@test.com');
   token = getTestToken(testUser.id);
 });
 
@@ -144,7 +144,7 @@ describe('notification:new event', () => {
   });
 
   it('other users do NOT receive the notification', async () => {
-    const otherUser = seedTestUser('ws-user-2', 'Other', 'other@test.com');
+    const otherUser = seedTestUser('40000000-0000-4000-8000-000000000002', 'Other', 'other@test.com');
     const targetClient = await connectClient(testUser.id);
     const otherClient = await connectClient(otherUser.id);
 

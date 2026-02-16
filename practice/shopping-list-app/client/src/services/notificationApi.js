@@ -1,4 +1,4 @@
-import { TOKEN_KEY } from './authApi';
+import { TOKEN_KEY, logout } from './authApi';
 
 const BASE_URL = 'http://localhost:3001/api';
 
@@ -11,7 +11,10 @@ function authHeaders(extra = {}) {
 }
 
 function handleErrorResponse(response, defaultMessage) {
-  if (response.status === 401) throw new Error('인증이 필요합니다.');
+  if (response.status === 401) {
+    logout();
+    throw new Error('인증이 필요합니다.');
+  }
   if (response.status === 403) throw new Error('접근 권한이 없습니다.');
   if (!response.ok) throw new Error(defaultMessage);
 }

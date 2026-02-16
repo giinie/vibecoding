@@ -6,7 +6,7 @@ let io = null;
 function initializeSocket(httpServer) {
   io = new Server(httpServer, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
       methods: ['GET', 'POST'],
     },
   });

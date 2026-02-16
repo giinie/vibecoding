@@ -15,8 +15,10 @@ const TYPE_LABELS = {
 };
 
 function getRelativeTime(dateString) {
+  if (!dateString) return '';
   const now = Date.now();
   const date = new Date(dateString).getTime();
+  if (isNaN(date)) return '';
   const diff = Math.floor((now - date) / 1000);
 
   if (diff < 60) return '\uBC29\uAE08';

@@ -5,10 +5,10 @@ const { getDatabase } = require('../db/connection');
 const SALT_ROUNDS = 10;
 
 const userModel = {
-  create({ name, email, password }) {
+  async create({ name, email, password }) {
     const db = getDatabase();
     const id = uuidv4();
-    const password_hash = bcrypt.hashSync(password, SALT_ROUNDS);
+    const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
 
     db.prepare(
       'INSERT INTO users (id, name, email, password_hash) VALUES (?, ?, ?, ?)'
@@ -32,8 +32,8 @@ const userModel = {
     ).get(email) || null;
   },
 
-  verifyPassword(plain, hash) {
-    return bcrypt.compareSync(plain, hash);
+  async verifyPassword(plain, hash) {
+    return bcrypt.compare(plain, hash);
   },
 };
 

@@ -20,7 +20,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   clearTestData();
-  testUser = seedTestUser('user-1', 'Alice', 'alice@test.com');
+  testUser = seedTestUser('10000000-0000-4000-8000-000000000001', 'Alice', 'alice@test.com');
   token = getTestToken(testUser.id);
 });
 
@@ -157,7 +157,7 @@ describe('GET /api/notifications/:userId', () => {
   });
 
   it('returns empty array for user with no notifications', async () => {
-    const otherUser = seedTestUser('user-empty', 'Empty', 'empty@test.com');
+    const otherUser = seedTestUser('10000000-0000-4000-8000-000000000002', 'Empty', 'empty@test.com');
     const otherToken = getTestToken(otherUser.id);
 
     const res = await agent
@@ -198,7 +198,7 @@ describe('PATCH /api/notifications/:id/read', () => {
 
   it('returns 404 for non-existent notification', async () => {
     const res = await agent
-      .patch('/api/notifications/non-existent-id/read')
+      .patch('/api/notifications/00000000-0000-4000-8000-000000000000/read')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(404);
@@ -270,7 +270,7 @@ describe('DELETE /api/notifications/:id', () => {
 
   it('returns 404 for non-existent notification', async () => {
     const res = await agent
-      .delete('/api/notifications/non-existent-id')
+      .delete('/api/notifications/00000000-0000-4000-8000-000000000000')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(404);

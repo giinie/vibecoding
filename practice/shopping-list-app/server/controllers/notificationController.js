@@ -16,6 +16,16 @@ const notificationController = {
         });
       }
 
+      if (title.length > 255) {
+        return res.status(400).json({ error: 'Title must be 255 characters or less' });
+      }
+      if (message.length > 2000) {
+        return res.status(400).json({ error: 'Message must be 2000 characters or less' });
+      }
+      if (metadata && JSON.stringify(metadata).length > 10240) {
+        return res.status(400).json({ error: 'Metadata must be 10KB or less' });
+      }
+
       if (user_id !== req.userId) {
         return res.status(403).json({ error: 'Forbidden: cannot create notifications for another user' });
       }
@@ -48,8 +58,10 @@ const notificationController = {
     try {
       const { userId } = req.params;
       const unreadOnly = req.query.unread_only === 'true';
-      const limit = parseInt(req.query.limit, 10) || 20;
-      const offset = parseInt(req.query.offset, 10) || 0;
+      const rawLimit = parseInt(req.query.limit, 10);
+      const limit = (!rawLimit || rawLimit < 1) ? 20 : Math.min(rawLimit, 100);
+      const rawOffset = parseInt(req.query.offset, 10);
+      const offset = (!rawOffset || rawOffset < 0) ? 0 : rawOffset;
 
       const result = notificationModel.findByUserId(userId, {
         unreadOnly,
@@ -77,6 +89,9 @@ const notificationController = {
       }
 
       const notification = notificationModel.markAsRead(id);
+      if (!notification) {
+        return res.status(404).json({ error: 'Notification not found' });
+      }
       emitNotificationRead(notification.user_id, id);
 
       return res.json(notification);
@@ -111,7 +126,10 @@ const notificationController = {
         return res.status(403).json({ error: 'Forbidden: notification does not belong to user' });
       }
 
-      notificationModel.delete(id);
+      const deleted = notificationModel.delete(id);
+      if (!deleted) {
+        return res.status(404).json({ error: 'Notification not found' });
+      }
 
       return res.status(204).send();
     } catch (err) {

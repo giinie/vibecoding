@@ -20,7 +20,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   clearTestData();
-  testUser = seedTestUser('auth-user-1', 'Auth User', 'auth@test.com');
+  testUser = seedTestUser('20000000-0000-4000-8000-000000000001', 'Auth User', 'auth@test.com');
   token = getTestToken(testUser.id);
 });
 
@@ -45,7 +45,7 @@ describe('Authentication - missing Authorization header', () => {
   });
 
   it('PATCH /api/notifications/:id/read without token returns 401', async () => {
-    const res = await agent.patch('/api/notifications/some-id/read');
+    const res = await agent.patch('/api/notifications/00000000-0000-4000-8000-000000000000/read');
 
     expect(res.status).toBe(401);
     expect(res.body.error).toMatch(/authentication required/i);
@@ -59,7 +59,7 @@ describe('Authentication - missing Authorization header', () => {
   });
 
   it('DELETE /api/notifications/:id without token returns 401', async () => {
-    const res = await agent.delete('/api/notifications/some-id');
+    const res = await agent.delete('/api/notifications/00000000-0000-4000-8000-000000000000');
 
     expect(res.status).toBe(401);
     expect(res.body.error).toMatch(/authentication required/i);
@@ -88,7 +88,7 @@ describe('Authentication - invalid token', () => {
 
 describe('Authorization - userId param mismatch', () => {
   it('GET /api/notifications/:userId with mismatched token returns 403', async () => {
-    const otherUser = seedTestUser('auth-user-2', 'Other User', 'other@test.com');
+    const otherUser = seedTestUser('20000000-0000-4000-8000-000000000002', 'Other User', 'other@test.com');
     const otherToken = getTestToken(otherUser.id);
 
     const res = await agent
@@ -100,7 +100,7 @@ describe('Authorization - userId param mismatch', () => {
   });
 
   it('PATCH /api/notifications/read-all/:userId with mismatched token returns 403', async () => {
-    const otherUser = seedTestUser('auth-user-2', 'Other User', 'other@test.com');
+    const otherUser = seedTestUser('20000000-0000-4000-8000-000000000002', 'Other User', 'other@test.com');
     const otherToken = getTestToken(otherUser.id);
 
     const res = await agent
@@ -112,7 +112,7 @@ describe('Authorization - userId param mismatch', () => {
   });
 
   it('POST /api/notifications with mismatched user_id in body returns 403', async () => {
-    const otherUser = seedTestUser('auth-user-2', 'Other User', 'other@test.com');
+    const otherUser = seedTestUser('20000000-0000-4000-8000-000000000002', 'Other User', 'other@test.com');
 
     const res = await agent
       .post('/api/notifications')
