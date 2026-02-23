@@ -28,7 +28,7 @@ const userModel = {
   findByEmail(email) {
     const db = getDatabase();
     return db.prepare(
-      'SELECT id, name, email, password_hash, created_at FROM users WHERE LOWER(email) = LOWER(?)'
+      'SELECT id, name, email, password_hash, created_at FROM users WHERE email = ?'
     ).get(email) || null;
   },
 

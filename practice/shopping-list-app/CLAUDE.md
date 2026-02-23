@@ -71,7 +71,7 @@ server/websocket/socketAuthMiddleware.js → JWT auth for WebSocket connections
 server/websocket/notificationEmitter.js  → Event emitters (new, read, read-all)
 ```
 
-- **Database**: SQLite via `better-sqlite3` (synchronous API). File stored at `server/db/notifications.db`. WAL mode + foreign keys enabled.
+- **Database**: SQLite via `better-sqlite3` (synchronous API). File stored at `server/db/notifications.db`. WAL mode + foreign keys enabled. Composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)` for efficient notification listing and unread count queries.
 - **WebSocket**: JWT auth required via `socket.handshake.auth.token`. Users join room `user:{userId}` after auth. Events: `notification:new`, `notification:read`, `notification:read-all`.
 - **Notification types** (enforced by CHECK constraint): `item_added`, `item_purchased`, `list_shared`, `reminder`.
 
@@ -104,7 +104,7 @@ client/src/components/ErrorBoundary.js        → React error boundary wrapper
 ```
 
 - Client proxies API requests to `http://localhost:3001` (hardcoded in `notificationApi.js`, proxy also set in `client/package.json`).
-- Currently uses a hardcoded `USER_ID = 'user-1'` in `App.js`.
+- `App.js` implements a JWT-based login/logout flow; `userId` is obtained from the login API response and managed in React state. No hardcoded user IDs.
 - `is_read` field uses SQLite integer convention (0/1) from the API; client-side code also sets `isRead: true` for local optimistic updates.
 
 ### Tests (`tests/`)

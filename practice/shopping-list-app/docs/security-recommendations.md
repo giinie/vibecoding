@@ -16,12 +16,12 @@
 | 3 | WebSocket 알림 데이터 변환(transform) 누락 | WARNING | 해결 |
 | 4 | 읽지 않은 알림 개수가 로드된 항목만 반영 | WARNING | 해결 |
 
-### 미해결 항목
+### 추가 해결 항목 (2026-02-23 확인 완료)
 
 | # | 항목 | 심각도 | 상태 |
 |---|------|--------|------|
-| 5 | REST API 인증 체계 강화 (JWT 도입) | CRITICAL | 미해결 |
-| 6 | WebSocket 인증 추가 | CRITICAL | 미해결 |
+| 5 | REST API 인증 체계 강화 (JWT 도입) | CRITICAL | 해결 |
+| 6 | WebSocket 인증 추가 | CRITICAL | 해결 |
 
 ---
 

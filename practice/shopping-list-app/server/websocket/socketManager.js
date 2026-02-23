@@ -22,7 +22,9 @@ function initializeSocket(httpServer) {
     }
 
     socket.on('disconnect', () => {
-      console.log(`Socket ${socket.id} disconnected`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Socket ${socket.id} disconnected`);
+      }
     });
   });
 
