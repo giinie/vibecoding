@@ -84,16 +84,20 @@ fridge-chef/
 │   ├── share_modal.py          # 공유 모달
 │   └── stats_widgets.py        # 통계 위젯
 ├── utils/                      # 유틸리티
-│   └── charts.py               # Plotly 차트 헬퍼
+│   ├── charts.py               # Plotly 차트 헬퍼
+│   ├── image.py                # PIL 이미지 검증/압축
+│   └── parser.py               # 레시피 API 응답 JSON 파싱
 ├── tests/                      # 테스트
 │   ├── test_auth.py            # 인증 테스트
 │   ├── test_user.py            # 사용자 테스트
+│   ├── test_recipe.py          # 레시피 테스트
+│   ├── test_vision.py          # 비전 테스트
 │   ├── test_recommendation.py  # 추천 테스트
 │   └── test_sharing.py         # 공유 테스트
+├── PRD_step1.md                # Step 1 요구사항
+├── PRD_step2.md                # Step 2 요구사항
+├── PRD_step3.md                # Step 3 요구사항
 └── docs/                       # 문서
-    ├── PRD_step1.md            # Step 1 요구사항
-    ├── PRD_step2.md            # Step 2 요구사항
-    ├── PRD_step3.md            # Step 3 요구사항
     └── WORK_REPORT*.md         # 작업 보고서
 ```
 
@@ -128,8 +132,11 @@ Streamlit 세션 상태에서 사용되는 주요 키:
 | `recognized_ingredients` | `list[str]` | 인식된 재료 목록 |
 | `uploaded_image` | `bytes` | 업로드된 이미지 |
 | `generated_recipes` | `list[dict]` | 생성된 레시피 |
+| `saved_recipes` | `list[dict]` | 저장된 레시피 목록 |
 | `user_id` | `int` | 로그인된 사용자 ID |
 | `is_authenticated` | `bool` | 로그인 상태 |
+| `username` | `str` | 로그인된 사용자 이름 |
+| `share_recipe_id` | `int` | 공유 대상 레시피 ID |
 
 ### 데이터베이스 모델
 
@@ -200,4 +207,4 @@ This project is licensed under the MIT License.
 ---
 
 **개발 현황**: Step 1, 2, 3 완료 (POC 단계)
-**테스트 커버리지**: 66 tests passing
+**테스트 커버리지**: 69 tests passing
