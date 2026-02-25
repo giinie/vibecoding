@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Purpose
+
+AI-powered recipe recommendation service that recognizes ingredients from fridge photos and generates personalized recipes. Built as a Streamlit multi-page application with SQLite persistence, targeting Korean-speaking users. Currently at POC stage with Steps 1-3 completed.
+
+> For comprehensive project metadata, see [`AGENTS.md`](AGENTS.md).
+
 ## Project Overview
 
 **Fridge Chef** - 냉장고 재료 기반 레시피 추천 서비스
@@ -32,8 +38,8 @@ POC (Proof of Concept) - **Step 1~3 구현 완료**
 | QR Code | qrcode[pil] |
 
 ### AI Models (via OpenRouter)
-- **Vision Model**: `nvidia/nemotron-nano-12b-v2-vl:free` - 이미지에서 재료 인식
-- **Text Model**: `nex-agi/deepseek-v3.1-nex-n1:free` - 레시피 생성
+
+> See [`AGENTS.md` → Dependencies → AI Models](AGENTS.md#ai-models-via-openrouter) for model details.
 
 ## Build/Run Commands
 
@@ -118,18 +124,7 @@ OPENROUTER_API_KEY=your_api_key_here
 
 ## Key Dependencies
 
-```toml
-dependencies = [
-    "streamlit>=1.40.0",
-    "python-dotenv>=1.0.0",
-    "requests>=2.32.0",
-    "pillow>=11.0.0",
-    "sqlalchemy>=2.0.0",
-    "bcrypt>=4.2.0",
-    "plotly>=5.18.0",
-    "qrcode[pil]>=7.4.0",
-]
-```
+> See [`AGENTS.md` → Dependencies](AGENTS.md#dependencies) for the full dependency list with version constraints.
 
 ## Testing
 
@@ -141,30 +136,11 @@ uv run pytest tests/ -v
 uv run pytest tests/test_auth.py -v
 ```
 
-### Test Coverage (66 tests)
-| Test File | Tests | Coverage |
-|-----------|-------|----------|
-| test_vision.py | 8 | Vision API, image encoding |
-| test_recipe.py | 16 | Recipe generation, parsing |
-| test_auth.py | 14 | Registration, login, profile |
-| test_user.py | 9 | Recipe CRUD, tags |
-| test_recommendation.py | 9 | Stats, cooking history |
-| test_sharing.py | 10 | Share links, QR codes |
+> 66 tests across 6 files. See [`tests/AGENTS.md`](tests/AGENTS.md) for per-file breakdown.
 
 ## Session State Keys
 
-Streamlit session state keys used across pages:
-
-| Key | Type | Description |
-|-----|------|-------------|
-| `recognized_ingredients` | `list[str]` | Step 1에서 인식된 재료 목록 |
-| `uploaded_image` | `bytes` | 업로드된 이미지 데이터 |
-| `generated_recipes` | `list[Recipe]` | Step 2에서 생성된 레시피 목록 |
-| `saved_recipes` | `list` | 저장된 레시피 목록 |
-| `user_id` | `int` | 로그인된 사용자 ID |
-| `is_authenticated` | `bool` | 로그인 상태 |
-| `username` | `str \| None` | 로그인된 사용자 이름 |
-| `share_recipe_id` | `int \| None` | 공유 모달을 표시할 레시피 ID |
+> See [`AGENTS.md` → Session State Keys`](AGENTS.md#session-state-keys-cross-page-communication) for the full cross-page communication table.
 
 ## API Response Formats
 
@@ -209,6 +185,20 @@ Response must be valid JSON with structure:
 - 레시피 저장, 태그, 메모, 평점
 - 대시보드 (요리 통계, 캘린더 히트맵)
 - 공유 기능 (URL, QR 코드, SNS)
+
+## Cross References
+
+| Document | Scope |
+|----------|-------|
+| [`AGENTS.md`](AGENTS.md) | Root project metadata, dependencies, session state, architecture flow |
+| [`services/AGENTS.md`](services/AGENTS.md) | Business logic layer: API integrations, auth, recommendations |
+| [`db/AGENTS.md`](db/AGENTS.md) | Database layer: models, connection management, schema |
+| [`components/AGENTS.md`](components/AGENTS.md) | Reusable Streamlit UI components |
+| [`utils/AGENTS.md`](utils/AGENTS.md) | Utility modules: image processing, JSON parsing, charts |
+| [`pages/AGENTS.md`](pages/AGENTS.md) | Streamlit multi-page structure (5 pages) |
+| [`models/AGENTS.md`](models/AGENTS.md) | Data transfer objects |
+| [`tests/AGENTS.md`](tests/AGENTS.md) | Test suite: 66 tests across 6 files |
+| [`docs/AGENTS.md`](docs/AGENTS.md) | Project documentation and reports |
 
 ## Code Style Guidelines
 

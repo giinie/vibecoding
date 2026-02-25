@@ -31,3 +31,6 @@ build/
 # MCP Configuration
 .amp/
 .mcp.json
+
+# Windows null device artifact
+nul
