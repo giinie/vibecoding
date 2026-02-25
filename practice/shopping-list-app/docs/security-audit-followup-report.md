@@ -46,7 +46,7 @@ Phase 1-4 보안 강화 구현 후, 보안 전문가 + 코드 리뷰어의 최�
 
 ## 변경 파일 요약
 
-```
+```diff
 server/controllers/notificationController.js   | 16 ++-
 server/index.js                                | 11 +-
 server/middleware/auth.js                      |  2 +-
@@ -64,7 +64,7 @@ tests/integration/auth.test.js                 | 신규 파일
 
 ## 테스트 결과
 
-```
+```text
 Test Suites: 7 passed, 7 total
 Tests:       69 passed, 69 total (기존 51 + 신규 18)
 Time:        2.352s

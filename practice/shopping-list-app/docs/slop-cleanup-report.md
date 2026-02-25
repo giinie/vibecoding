@@ -65,11 +65,11 @@
 
 **문제**: `create()` 메서드 내부(라인 19)에 UUID v4 정규식이 로컬로 정의되어 있으나, 동일한 정규식이 `server/middleware/validateUuid.js`에 이미 존재합니다.
 
-```
-// notificationController.js (라인 19)
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+```javascript
+// notificationController.js (모듈 레벨 상수로 호이스팅됨, 2026-02-25)
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// validateUuid.js — 동일한 정규식
+// validateUuid.js — 동일한 범용 UUID 정규식
 ```
 
 | 선택지 | 설명 |

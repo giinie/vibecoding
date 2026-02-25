@@ -103,7 +103,7 @@ Codex 분석의 정확성과 실질적 영향을 검증하기 위해 3명의 전
 
 ### 테스트 결과
 
-```
+```text
 Test Suites: 7 passed, 7 total
 Tests:       69 passed, 69 total
 ```

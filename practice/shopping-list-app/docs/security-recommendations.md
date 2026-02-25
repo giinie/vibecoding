@@ -29,7 +29,7 @@
 
 ### 문제점
 
-```
+```bash
 # 현재: 누구나 헤더를 조작하여 다른 사용자로 위장 가능
 curl -H "x-user-id: user-2" http://localhost:3001/api/notifications/user-2
 ```
@@ -190,7 +190,7 @@ export function connect(token) {
 
 ## 구현 순서 권장
 
-```
+```text
 #5 REST JWT 인증  →  #6 WebSocket JWT 인증
     │                       │
     └── users 테이블 수정     └── #5의 JWT 인프라 재사용

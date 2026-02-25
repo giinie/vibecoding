@@ -6,47 +6,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
 
+## Critical Rules
+
+- **MUST** set `JWT_SECRET` in `.env` before starting the server — it exits immediately without it. Tests set `process.env.JWT_SECRET = 'test-jwt-secret-key'` in `setupTestDatabase()`.
+- **MUST** call `setupTestDatabase()` before `createTestServer()` in tests — order matters because tests monkey-patch `server/db/connection.js` via module cache. Reversing the order breaks test isolation.
+- **MUST** use UUID v4 format for any `userId` route parameter in tests. The default `test-user-1` string will be rejected by `validateUuid` middleware. Use `crypto.randomUUID()` or a fixed UUID like `'550e8400-e29b-41d4-a716-446655440000'`.
+- **MUST** transform `is_read` at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`).
+- **MUST** use `handleErrorResponse()` in `notificationApi.js` for all new API functions — it calls `logout()` on 401 to preserve the auto-logout contract.
+- **Notification create validation**: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+
+## First-time Setup
+
+```bash
+cp .env.example .env          # Fill in JWT_SECRET (required)
+npm install && cd client && npm install && cd ..
+npm run migrate                # Auto-runs on server start too
+npm run seed                   # Optional: insert sample data
+npm run dev                    # Starts both server (3001) and client (3000)
+```
+
 ## Commands
 
 ```bash
-# Install dependencies (run from shopping-list-app/)
-npm install && cd client && npm install && cd ..
-
-# Run both server and client concurrently (dev mode)
-npm run dev
-
-# Run server only (nodemon, port 3001)
-npm run server
-
-# Run client only (CRA dev server, port 3000)
-npm run client
-
-# Run all tests (unit + integration)
-npm test
-
-# Run integration tests only
-npm run test:integration
-
-# Run a specific test file
-npx jest tests/integration/notification.api.test.js
-
-# Database migration (auto-runs on server start)
-npm run migrate
-
-# Seed sample data
-npm run seed
+npm run dev                    # Both server + client concurrently
+npm run server                 # Server only (nodemon, port 3001)
+npm run client                 # Client only (CRA dev server, port 3000)
+npm test                       # All tests (unit + integration)
+npm run test:integration       # Integration tests only
+npx jest tests/integration/notification.api.test.js  # Single test file
+npm run migrate                # DB migration (also auto-runs on start)
+npm run seed                   # Seed sample data
 ```
 
 ## Environment Variables
 
-Required in `.env` (server will exit without `JWT_SECRET`):
+Required in `.env` (server):
 
-- `JWT_SECRET` — JWT signing secret (required)
+- `JWT_SECRET` — JWT signing secret (**required**, server exits without it)
 - `JWT_EXPIRES_IN` — Token expiry (default: `7d`)
 - `PORT` — Server port (default: `3001`)
 - `CORS_ORIGIN` — Allowed origin (default: `http://localhost:3000`)
 - `TRUST_PROXY` — Set for reverse proxy environments
 - `NODE_ENV` — `development` enables verbose error messages and socket logs
+
+Optional in `client/.env` (CRA prefix required):
+
+- `REACT_APP_API_URL` — API base URL (default: `http://localhost:3001/api`)
+- `REACT_APP_SOCKET_URL` — WebSocket server URL (default: `http://localhost:3001`)
+
+> **Note**: `REACT_APP_API_URL` uses absolute URLs, which bypass the CRA proxy in `client/package.json`. The proxy only applies when using relative fetch paths (e.g., `/api/...`). When `REACT_APP_API_URL` is set, the proxy has no effect.
 
 ## Architecture
 
@@ -55,12 +63,12 @@ Required in `.env` (server will exit without `JWT_SECRET`):
 Layered architecture with JWT auth and WebSocket side-channel:
 
 ```
-server/index.js                          → Express app bootstrap, security middleware, graceful shutdown
+server/index.js                          → Express bootstrap, security middleware, graceful shutdown
 server/routes/auth.js                    → POST /register, POST /login
 server/routes/notifications.js           → Notification CRUD routes (JWT required)
 server/controllers/notificationController.js → Request handling, delegates to models
 server/middleware/auth.js                → JWT authenticate + authorizeUser middleware
-server/middleware/validateUuid.js         → UUID v4 format validation middleware
+server/middleware/validateUuid.js         → UUID format validation middleware
 server/models/notificationModel.js       → Notification data access (better-sqlite3)
 server/models/userModel.js               → User CRUD with bcrypt password hashing
 server/db/connection.js                  → Singleton DB connection (lazy-initialized)
@@ -71,23 +79,23 @@ server/websocket/socketAuthMiddleware.js → JWT auth for WebSocket connections
 server/websocket/notificationEmitter.js  → Event emitters (new, read, read-all)
 ```
 
-- **Database**: SQLite via `better-sqlite3` (synchronous API). File stored at `server/db/notifications.db`. WAL mode + foreign keys enabled. Composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)` for efficient notification listing and unread count queries.
-- **WebSocket**: JWT auth required via `socket.handshake.auth.token`. Users join room `user:{userId}` after auth. Events: `notification:new`, `notification:read`, `notification:read-all`.
-- **Notification types** (enforced by CHECK constraint): `item_added`, `item_purchased`, `list_shared`, `reminder`.
+- **Database**: SQLite via `better-sqlite3` (synchronous API). WAL mode + foreign keys enabled. Composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`.
+- **WebSocket**: JWT auth via `socket.handshake.auth.token`. Users join room `user:{userId}`. Events: `notification:new`, `notification:read`, `notification:read-all`.
+- **Notification types** (CHECK constraint): `item_added`, `item_purchased`, `list_shared`, `reminder`.
 
 ### Security
 
 - **helmet** for HTTP security headers
-- **express-rate-limit**: Auth routes 20 req/15min, API routes 100 req/15min
-- **JSON body limit**: 10kb (`express.json({ limit: '10kb' })`)
-- **CORS**: Configurable via `CORS_ORIGIN` env var (default: `http://localhost:3000`)
-- **JWT**: HS256 algorithm, secret via `JWT_SECRET` env var (required, server exits without it)
-- **Password hashing**: bcryptjs with 10 salt rounds
-- **UUID validation middleware**: All route params validated against UUID v4 format
+- **express-rate-limit**: Auth 20 req/15min, API 100 req/15min
+- **JSON body limit**: 10kb
+- **CORS**: Configurable via `CORS_ORIGIN` env var
+- **JWT**: HS256 algorithm, `JWT_SECRET` required
+- **Password hashing**: bcryptjs, 10 salt rounds
+- **UUID validation**: All route params validated against UUID format
 
 ### Client (`client/`)
 
-React 18 app (Create React App) with custom hooks pattern:
+React 18 app (CRA) with custom hooks pattern:
 
 ```
 client/src/context/SocketContext.js       → React Context providing socket instance
@@ -103,68 +111,50 @@ client/src/components/NotificationItem.js     → Single notification item
 client/src/components/ErrorBoundary.js        → React error boundary wrapper
 ```
 
-- Client proxies API requests to `http://localhost:3001` (hardcoded in `notificationApi.js`, proxy also set in `client/package.json`).
-- `App.js` implements a JWT-based login/logout flow; `userId` is obtained from the login API response and managed in React state. No hardcoded user IDs.
-- `is_read` field uses SQLite integer convention (0/1) from the API; client-side code also sets `isRead: true` for local optimistic updates.
+- JWT token stored in `localStorage` under `TOKEN_KEY` constant (defined in `authApi.js`). The `authHeaders()` helper in `notificationApi.js` reads from this key for every API request.
+- `App.js` implements JWT login/logout flow; `userId` from login response, managed in React state.
 
 ### Tests (`tests/`)
 
 Integration tests using Jest + Supertest with in-memory SQLite:
 
-- `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()` helpers. Clears module cache for all server modules on teardown.
-- `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port with supertest agent.
-- Tests mock the DB connection module at import time, so test order matters: always call `setupTestDatabase()` before `createTestServer()`.
+- `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()`.
+- `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port.
+- 7 test suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `notificationApi.test.js`, `notificationTransform.test.js`.
 
-### Test Suites
+### API Endpoints
 
-- `tests/integration/auth.test.js` — Registration, login, validation
-- `tests/integration/notification.api.test.js` — CRUD operations
-- `tests/integration/notification.auth.test.js` — Auth/authorization checks
-- `tests/integration/notification.flow.test.js` — End-to-end flows
-- `tests/integration/notification.websocket.test.js` — Real-time WebSocket events
-- `tests/unit/notificationApi.test.js` — Client API service unit tests
-- `tests/unit/notificationTransform.test.js` — Data transform unit tests
-
-### Auth API Endpoints
-
-All under `/api/auth` (rate-limited: 20 req/15min):
+Auth (`/api/auth`, rate-limited 20 req/15min):
 
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/register` | Create user account (name, email, password) |
 | POST | `/login` | Authenticate and receive JWT token |
 
-### Notification API Endpoints
-
-All under `/api/notifications` (JWT required, rate-limited: 100 req/15min):
+Notifications (`/api/notifications`, JWT required, rate-limited 100 req/15min):
 
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/` | Create notification |
-| GET | `/:userId` | List user notifications (query: `unread_only`, `limit`, `offset`) |
+| GET | `/:userId` | List notifications (query: `unread_only`, `limit`, `offset`) |
 | PATCH | `/:id/read` | Mark single as read |
 | PATCH | `/read-all/:userId` | Mark all as read |
 | DELETE | `/:id` | Delete notification |
 
 ### Documentation (`docs/`)
 
-- `security-recommendations.md` — Security audit findings and remediation plan
+- `security-recommendations.md` — Security audit findings and remediation plan (all items resolved)
 - `security-audit-followup-report.md` — Post-audit verification results
 - `collaborator-review.md` — Collaborator code review notes
+- `slop-cleanup-report.md` — AI slop cleanup scan results
+- `session-report-2026-02-23.md` — Session work log (docs sync, perf analysis, cross-verification)
 
 ## Key Patterns
 
-- **DB connection singleton**: `getDatabase()` lazily creates the connection. Tests replace this function to inject an in-memory DB.
-- **Module cache clearing in tests**: `teardownTestDatabase()` deletes `require.cache` entries for all server modules to ensure fresh state between test suites.
-- **WebSocket event flow**: Controller actions (create, markAsRead, markAllAsRead) emit Socket.io events after DB writes. The client `useSocket` hook subscribes to these for real-time UI updates.
-- **UUID primary keys**: All entities use `uuid` v4 for IDs, generated server-side.
-- **JWT auth flow**: `authenticate` middleware extracts token from `Authorization: Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`.
-- **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT with test secret. Always seed user before creating test token.
-- **Graceful shutdown**: Server handles SIGTERM/SIGINT, closes HTTP server and DB connection with 10s timeout.
-
-## Gotchas
-
-- **Test user IDs are NOT UUIDs**: Test helpers use `test-user-1` (non-UUID) by default. `validateUuid` middleware will reject these — tests that hit routes with `:userId` param must use real UUID format or seed accordingly.
-- **Module cache**: Tests monkey-patch `server/db/connection.js`. Always call `setupTestDatabase()` before `createTestServer()` — order matters.
-- **JWT_SECRET required**: Server exits immediately if `JWT_SECRET` is not set. Tests set it via `process.env.JWT_SECRET = 'test-jwt-secret-key'` in `setupTestDatabase()`.
-- **`is_read` type mismatch**: SQLite returns integer (0/1), client-side uses boolean. Transform at the API boundary.
+- **DB connection singleton**: `getDatabase()` lazily creates the connection. WHY: lazy init allows tests to monkey-patch `connection.js` before the module loads — eager init would prevent injection.
+- **Module cache clearing in tests**: `teardownTestDatabase()` deletes `require.cache` entries for all server modules. WHY: ensures fresh state between test suites when DB connection is replaced.
+- **WebSocket event flow**: Controller actions emit Socket.io events after DB writes. The client `useSocket` hook subscribes for real-time UI updates.
+- **UUID primary keys**: All entities use `uuid` v4, generated server-side. WHY: avoids integer ID enumeration attacks.
+- **JWT auth flow**: `authenticate` extracts `Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`.
+- **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT. Always seed user before creating token.
+- **Auto-logout on 401**: `handleErrorResponse()` in `notificationApi.js` calls `logout()` on 401. All API functions MUST use this helper.

@@ -10,7 +10,6 @@ function migrate() {
 
   try {
     db.exec(schema);
-    console.log('Migration completed successfully.');
   } catch (err) {
     console.error('Migration failed:', err.message);
     process.exit(1);
@@ -21,6 +20,7 @@ function migrate() {
 
 if (require.main === module) {
   migrate();
+  console.log('Migration completed successfully.');
 }
 
 module.exports = { migrate };

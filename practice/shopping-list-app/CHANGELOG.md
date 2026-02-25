@@ -6,6 +6,12 @@
 ## [Unreleased]
 
 ### Changed
+- AI slop 정리 적용 (`/deslop apply`) (2026-02-25)
+  - `client/src/services/socketService.js`: connect/disconnect `console.log`에 NODE_ENV 개발 환경 가드 추가, `REACT_APP_SOCKET_URL` 환경변수 지원
+  - `client/src/services/authApi.js`: `BASE_URL`에 `REACT_APP_API_URL` 환경변수 폴백 추가
+  - `client/src/services/notificationApi.js`: `BASE_URL`에 `REACT_APP_API_URL` 환경변수 폴백 추가
+  - `server/controllers/notificationController.js`: `UUID_REGEX`, `VALID_TYPES` 상수를 모듈 레벨로 호이스팅
+  - `server/db/migrate.js`: 성공 `console.log`를 `require.main` 가드 안으로 이동
 - 문서와 코드 상태 동기화 (`/sync-docs apply`) (2026-02-23)
   - `CLAUDE.md`: 하드코딩 USER_ID 설명을 JWT 로그인 플로우 설명으로 교체
   - `docs/security-recommendations.md`: JWT 인증 항목(#5, #6) 상태를 "해결"로 업데이트

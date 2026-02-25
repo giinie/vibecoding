@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 import { TOKEN_KEY } from './authApi';
 
-const SOCKET_URL = 'http://localhost:3001';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
 
 let socket = null;
 
@@ -20,11 +20,15 @@ export function connect() {
   });
 
   socket.on('connect', () => {
-    console.log('Socket connected:', socket.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Socket connected:', socket.id);
+    }
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Socket disconnected:', reason);
+    }
   });
 
   socket.on('connect_error', (err) => {
