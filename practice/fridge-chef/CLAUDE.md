@@ -22,7 +22,7 @@ POC (Proof of Concept) - **Step 1~3 구현 완료**
 | Component | Technology |
 |-----------|------------|
 | Language | Python 3.14.2 |
-| Package Manager | uv (environment: vibecoding) |
+| Package Manager | uv |
 | Web Framework | Streamlit |
 | Database | SQLite (POC) |
 | ORM | SQLAlchemy 2.0 |
@@ -66,6 +66,8 @@ fridge-chef/
 │   ├── 4_💾_저장된_레시피.py  # Step 3: Saved recipes management
 │   └── 5_📊_대시보드.py       # Step 3: Statistics dashboard
 ├── services/                 # Business logic
+│   ├── config.py             # Configuration management
+│   ├── api_utils.py          # API utilities (retry, error handling)
 │   ├── vision.py             # OpenRouter vision API
 │   ├── recipe.py             # Recipe generation
 │   ├── auth.py               # Authentication (bcrypt)
@@ -77,11 +79,16 @@ fridge-chef/
 │   ├── models.py             # SQLAlchemy models
 │   └── init_db.py            # Schema initialization
 ├── utils/                    # Utilities
-│   └── charts.py             # Plotly chart helpers
+│   ├── charts.py             # Plotly chart helpers
+│   ├── image.py              # Image processing
+│   └── parser.py             # JSON parsing
 ├── components/               # Reusable Streamlit components
 │   ├── recipe_card.py        # Recipe display card
 │   ├── share_modal.py        # Share modal with QR/SNS
-│   └── stats_widgets.py      # Dashboard stat widgets
+│   ├── stats_widgets.py      # Dashboard stat widgets
+│   └── empty_state.py        # Empty state placeholders
+├── models/                   # Data models
+│   └── recipe.py             # Recipe dataclass
 └── tests/                    # Test files (66 tests)
     ├── test_vision.py
     ├── test_recipe.py
@@ -153,8 +160,10 @@ Streamlit session state keys used across pages:
 | `recognized_ingredients` | `list[str]` | Step 1에서 인식된 재료 목록 |
 | `uploaded_image` | `bytes` | 업로드된 이미지 데이터 |
 | `generated_recipes` | `list[Recipe]` | Step 2에서 생성된 레시피 목록 |
+| `saved_recipes` | `list` | 저장된 레시피 목록 |
 | `user_id` | `int` | 로그인된 사용자 ID |
 | `is_authenticated` | `bool` | 로그인 상태 |
+| `username` | `str \| None` | 로그인된 사용자 이름 |
 | `share_recipe_id` | `int \| None` | 공유 모달을 표시할 레시피 ID |
 
 ## API Response Formats

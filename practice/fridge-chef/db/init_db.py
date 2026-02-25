@@ -5,6 +5,9 @@ Performance optimization:
 - Thread-safe initialization
 """
 from threading import Lock
+import logging
+
+logger = logging.getLogger(__name__)
 
 from db.database import engine
 from db.models import Base
@@ -38,7 +41,7 @@ def drop_database() -> None:
     global _initialized
     Base.metadata.drop_all(bind=engine)
     _initialized = False
-    print("Database tables dropped!")
+    logger.info("Database tables dropped!")
 
 
 def is_initialized() -> bool:
@@ -48,4 +51,4 @@ def is_initialized() -> bool:
 
 if __name__ == "__main__":
     init_database()
-    print("Database initialized successfully!")
+    logger.info("Database initialized successfully!")

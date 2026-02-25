@@ -25,6 +25,9 @@ dist/
 build/
 *.egg-info/
 
+# SQLite database
+*.db
+
 # MCP Configuration
 .amp/
 .mcp.json

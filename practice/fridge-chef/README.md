@@ -69,6 +69,8 @@ fridge-chef/
 │   ├── 4_💾_저장된_레시피.py    # Step 3: 레시피 관리
 │   └── 5_📊_대시보드.py         # Step 3: 통계 대시보드
 ├── services/                   # 비즈니스 로직
+│   ├── config.py               # 설정 관리
+│   ├── api_utils.py            # API 유틸리티 (재시도, 에러 처리)
 │   ├── vision.py               # OpenRouter Vision API
 │   ├── recipe.py               # 레시피 생성 서비스
 │   ├── auth.py                 # 인증 서비스
@@ -82,20 +84,29 @@ fridge-chef/
 ├── components/                 # UI 컴포넌트
 │   ├── recipe_card.py          # 레시피 카드
 │   ├── share_modal.py          # 공유 모달
-│   └── stats_widgets.py        # 통계 위젯
+│   ├── stats_widgets.py        # 통계 위젯
+│   └── empty_state.py          # 빈 상태 안내
 ├── utils/                      # 유틸리티
-│   └── charts.py               # Plotly 차트 헬퍼
+│   ├── charts.py               # Plotly 차트 헬퍼
+│   ├── image.py                # 이미지 처리
+│   └── parser.py               # JSON 파싱
+├── models/                     # 데이터 모델
+│   └── recipe.py               # Recipe 데이터클래스
 ├── tests/                      # 테스트
+│   ├── test_vision.py          # 비전 테스트
+│   ├── test_recipe.py          # 레시피 테스트
 │   ├── test_auth.py            # 인증 테스트
 │   ├── test_user.py            # 사용자 테스트
 │   ├── test_recommendation.py  # 추천 테스트
 │   └── test_sharing.py         # 공유 테스트
 └── docs/                       # 문서
-    ├── PRD_step1.md            # Step 1 요구사항
-    ├── PRD_step2.md            # Step 2 요구사항
-    ├── PRD_step3.md            # Step 3 요구사항
-    └── WORK_REPORT*.md         # 작업 보고서
+    ├── WORK_REPORT_STEP1.md    # Step 1 작업 보고서
+    ├── WORK_REPORT_STEP2.md    # Step 2 작업 보고서
+    ├── WORK_REPORT_STEP3.md    # Step 3 작업 보고서
+    └── NOTION_협업_개선_제안.md  # 협업 개선 제안서
 ```
+
+> **참고**: PRD 파일(`PRD_step1.md`, `PRD_step2.md`, `PRD_step3.md`)은 프로젝트 루트에 위치합니다.
 
 ## 개발 가이드
 
@@ -127,9 +138,12 @@ Streamlit 세션 상태에서 사용되는 주요 키:
 |-----|------|-------------|
 | `recognized_ingredients` | `list[str]` | 인식된 재료 목록 |
 | `uploaded_image` | `bytes` | 업로드된 이미지 |
-| `generated_recipes` | `list[dict]` | 생성된 레시피 |
+| `generated_recipes` | `list[Recipe]` | 생성된 레시피 |
+| `saved_recipes` | `list` | 저장된 레시피 |
 | `user_id` | `int` | 로그인된 사용자 ID |
 | `is_authenticated` | `bool` | 로그인 상태 |
+| `username` | `str \| None` | 로그인된 사용자 이름 |
+| `share_recipe_id` | `int \| None` | 공유할 레시피 ID |
 
 ### 데이터베이스 모델
 
