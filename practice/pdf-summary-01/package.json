@@ -1,0 +1,16 @@
+{
+  "name": "pdf-summary-01",
+  "version": "1.0.0",
+  "description": "PDF 문서 요약 AI 웹 애플리케이션 - 혼자 공부하는 바이브코딩 with 클로드코드 7장 실습",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "keywords": ["pdf", "summarization", "ai", "openrouter", "deepseek"],
+  "author": "Gi-in Jeong",
+  "license": "MIT"
+}

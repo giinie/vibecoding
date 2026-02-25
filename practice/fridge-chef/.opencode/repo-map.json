@@ -1,0 +1,1289 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-02-24T14:07:41Z",
+  "updated": "2026-02-24T14:07:41Z",
+  "git": {
+    "commit": "0ed7bdf",
+    "branch": "practice"
+  },
+  "project": {
+    "languages": [
+      "python"
+    ]
+  },
+  "stats": {
+    "totalFiles": 38,
+    "totalSymbols": 142
+  },
+  "files": {
+    "app.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_session_state",
+            "line": 33
+          },
+          {
+            "name": "main",
+            "line": 43
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "db.init_db",
+          "kind": "named"
+        },
+        {
+          "source": "streamlit",
+          "kind": "direct"
+        }
+      ]
+    },
+    "components/__init__.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "components.recipe_card",
+          "kind": "named"
+        },
+        {
+          "source": "components.share_modal",
+          "kind": "named"
+        },
+        {
+          "source": "components.stats_widgets",
+          "kind": "named"
+        }
+      ]
+    },
+    "components/empty_state.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "typing",
+          "kind": "named"
+        },
+        {
+          "source": "streamlit",
+          "kind": "direct"
+        }
+      ]
+    },
+    "components/recipe_card.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "streamlit",
+          "kind": "direct"
+        }
+      ]
+    },
+    "components/share_modal.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "urllib.parse",
+          "kind": "named"
+        },
+        {
+          "source": "services.sharing",
+          "kind": "named"
+        },
+        {
+          "source": "streamlit",
+          "kind": "direct"
+        }
+      ]
+    },
+    "components/stats_widgets.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "streamlit",
+          "kind": "direct"
+        }
+      ]
+    },
+    "db/__init__.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "db.database",
+          "kind": "named"
+        },
+        {
+          "source": "db.models",
+          "kind": "named"
+        }
+      ]
+    },
+    "db/database.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "_configure_sqlite_pragmas",
+            "line": 25
+          },
+          {
+            "name": "get_engine",
+            "line": 41
+          },
+          {
+            "name": "get_db",
+            "line": 80
+          },
+          {
+            "name": "close_all_connections",
+            "line": 99
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "pathlib",
+          "kind": "named"
+        },
+        {
+          "source": "contextlib",
+          "kind": "named"
+        },
+        {
+          "source": "threading",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy.orm",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy.pool",
+          "kind": "named"
+        }
+      ]
+    },
+    "db/init_db.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_database",
+            "line": 10
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "threading",
+          "kind": "named"
+        },
+        {
+          "source": "db.database",
+          "kind": "named"
+        },
+        {
+          "source": "db.models",
+          "kind": "named"
+        }
+      ]
+    },
+    "db/models.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "User",
+            "line": 12
+          },
+          {
+            "name": "UserPreferences",
+            "line": 31
+          },
+          {
+            "name": "SavedRecipe",
+            "line": 78
+          },
+          {
+            "name": "CookingHistory",
+            "line": 124
+          },
+          {
+            "name": "IngredientUsage",
+            "line": 156
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "datetime",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy.orm",
+          "kind": "named"
+        },
+        {
+          "source": "json",
+          "kind": "direct"
+        }
+      ]
+    },
+    "main.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "main",
+            "line": 0
+          }
+        ]
+      },
+      "imports": []
+    },
+    "models/__init__.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "models.recipe",
+          "kind": "named"
+        }
+      ]
+    },
+    "models/recipe.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "Recipe",
+            "line": 5
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "dataclasses",
+          "kind": "named"
+        }
+      ]
+    },
+    "pages/1_🍳_재료_인식.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_session_state",
+            "line": 51
+          },
+          {
+            "name": "render_image_upload",
+            "line": 59
+          },
+          {
+            "name": "render_image_preview",
+            "line": 83
+          },
+          {
+            "name": "render_ingredient_list",
+            "line": 89
+          },
+          {
+            "name": "process_image",
+            "line": 140
+          },
+          {
+            "name": "main",
+            "line": 176
+          }
+        ]
+      },
+      "imports": []
+    },
+    "pages/2_📖_레시피_생성.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_session_state",
+            "line": 24
+          },
+          {
+            "name": "render_ingredient_section",
+            "line": 38
+          },
+          {
+            "name": "render_settings",
+            "line": 84
+          },
+          {
+            "name": "render_recipe_card",
+            "line": 147
+          },
+          {
+            "name": "generate_recipes",
+            "line": 238
+          },
+          {
+            "name": "main",
+            "line": 296
+          }
+        ]
+      },
+      "imports": []
+    },
+    "pages/3_👤_내_프로필.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_session_state",
+            "line": 21
+          },
+          {
+            "name": "render_login_form",
+            "line": 31
+          },
+          {
+            "name": "render_register_form",
+            "line": 74
+          },
+          {
+            "name": "render_profile_settings",
+            "line": 160
+          },
+          {
+            "name": "main",
+            "line": 271
+          }
+        ]
+      },
+      "imports": []
+    },
+    "pages/4_💾_저장된_레시피.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_session_state",
+            "line": 24
+          },
+          {
+            "name": "handle_cook",
+            "line": 36
+          },
+          {
+            "name": "handle_delete",
+            "line": 54
+          },
+          {
+            "name": "handle_share",
+            "line": 65
+          },
+          {
+            "name": "render_rating_widget",
+            "line": 70
+          },
+          {
+            "name": "main",
+            "line": 92
+          }
+        ]
+      },
+      "imports": []
+    },
+    "pages/5_📊_대시보드.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "init_session_state",
+            "line": 28
+          },
+          {
+            "name": "main",
+            "line": 36
+          }
+        ]
+      },
+      "imports": []
+    },
+    "services/__init__.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": ".vision",
+          "kind": "relative"
+        },
+        {
+          "source": ".config",
+          "kind": "relative"
+        }
+      ]
+    },
+    "services/api_utils.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "APIError",
+            "line": 18
+          }
+        ],
+        "functions": [
+          {
+            "name": "__init__",
+            "line": 20
+          },
+          {
+            "name": "close_api_session",
+            "line": 63
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "functools",
+          "kind": "named"
+        },
+        {
+          "source": "typing",
+          "kind": "named"
+        },
+        {
+          "source": "requests.adapters",
+          "kind": "named"
+        },
+        {
+          "source": "urllib3.util.retry",
+          "kind": "named"
+        },
+        {
+          "source": "time",
+          "kind": "direct"
+        },
+        {
+          "source": "requests",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/auth.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "AuthService",
+            "line": 8
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "sqlalchemy.orm",
+          "kind": "named"
+        },
+        {
+          "source": "db.models",
+          "kind": "named"
+        },
+        {
+          "source": "db.database",
+          "kind": "named"
+        },
+        {
+          "source": "bcrypt",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/config.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "Config",
+            "line": 7
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "dotenv",
+          "kind": "named"
+        },
+        {
+          "source": "os",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/recipe.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "RecipeService",
+            "line": 24
+          }
+        ],
+        "functions": [
+          {
+            "name": "__init__",
+            "line": 27
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "pathlib",
+          "kind": "named"
+        },
+        {
+          "source": "models.recipe",
+          "kind": "named"
+        },
+        {
+          "source": "services.config",
+          "kind": "named"
+        },
+        {
+          "source": "services.api_utils",
+          "kind": "named"
+        },
+        {
+          "source": "utils.parser",
+          "kind": "named"
+        },
+        {
+          "source": "sys",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/recommendation.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "RecommendationScore",
+            "line": 12
+          },
+          {
+            "name": "RecommendationService",
+            "line": 20
+          }
+        ],
+        "functions": [
+          {
+            "name": "__init__",
+            "line": 23
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "datetime",
+          "kind": "named"
+        },
+        {
+          "source": "typing",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy",
+          "kind": "named"
+        },
+        {
+          "source": "sqlalchemy.orm",
+          "kind": "named"
+        },
+        {
+          "source": "db.database",
+          "kind": "named"
+        },
+        {
+          "source": "db.models",
+          "kind": "named"
+        },
+        {
+          "source": "collections",
+          "kind": "named"
+        },
+        {
+          "source": "json",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/sharing.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "SharingService",
+            "line": 10
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "io",
+          "kind": "named"
+        },
+        {
+          "source": "db.database",
+          "kind": "named"
+        },
+        {
+          "source": "db.models",
+          "kind": "named"
+        },
+        {
+          "source": "secrets",
+          "kind": "direct"
+        },
+        {
+          "source": "qrcode",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/user.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "UserRecipeService",
+            "line": 8
+          }
+        ],
+        "functions": [
+          {
+            "name": "__init__",
+            "line": 11
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "datetime",
+          "kind": "named"
+        },
+        {
+          "source": "db.database",
+          "kind": "named"
+        },
+        {
+          "source": "db.models",
+          "kind": "named"
+        },
+        {
+          "source": "json",
+          "kind": "direct"
+        }
+      ]
+    },
+    "services/vision.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "VisionService",
+            "line": 19
+          }
+        ],
+        "functions": [
+          {
+            "name": "__init__",
+            "line": 22
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": ".config",
+          "kind": "relative"
+        },
+        {
+          "source": ".api_utils",
+          "kind": "relative"
+        },
+        {
+          "source": "base64",
+          "kind": "direct"
+        },
+        {
+          "source": "re",
+          "kind": "direct"
+        }
+      ]
+    },
+    "test_api.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": [
+          {
+            "name": "test_text_model",
+            "line": 17
+          },
+          {
+            "name": "test_image_model",
+            "line": 47
+          }
+        ]
+      },
+      "imports": [
+        {
+          "source": "dotenv",
+          "kind": "named"
+        },
+        {
+          "source": "os",
+          "kind": "direct"
+        },
+        {
+          "source": "requests",
+          "kind": "direct"
+        },
+        {
+          "source": "base64",
+          "kind": "direct"
+        }
+      ]
+    },
+    "tests/test_auth.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "TestAuthService",
+            "line": 24
+          }
+        ],
+        "functions": [
+          {
+            "name": "setup_database",
+            "line": 15
+          },
+          {
+            "name": "test_hash_password",
+            "line": 27
+          },
+          {
+            "name": "test_verify_password_correct",
+            "line": 36
+          },
+          {
+            "name": "test_verify_password_incorrect",
+            "line": 43
+          },
+          {
+            "name": "test_register_success",
+            "line": 50
+          },
+          {
+            "name": "test_register_duplicate_username",
+            "line": 63
+          },
+          {
+            "name": "test_login_success",
+            "line": 70
+          },
+          {
+            "name": "test_login_wrong_password",
+            "line": 78
+          },
+          {
+            "name": "test_login_nonexistent_user",
+            "line": 85
+          },
+          {
+            "name": "test_get_user_by_id",
+            "line": 91
+          },
+          {
+            "name": "test_get_user_by_invalid_id",
+            "line": 99
+          },
+          {
+            "name": "test_update_profile",
+            "line": 105
+          },
+          {
+            "name": "test_update_preferences",
+            "line": 120
+          },
+          {
+            "name": "test_get_preferences_default",
+            "line": 139
+          },
+          {
+            "name": "test_delete_account",
+            "line": 149
+          }
+        ]
+      },
+      "imports": []
+    },
+    "tests/test_recipe.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "TestRecipe",
+            "line": 14
+          },
+          {
+            "name": "TestRecipeParser",
+            "line": 74
+          },
+          {
+            "name": "TestRecipeService",
+            "line": 163
+          }
+        ],
+        "functions": [
+          {
+            "name": "test_recipe_creation",
+            "line": 17
+          },
+          {
+            "name": "test_recipe_from_dict",
+            "line": 35
+          },
+          {
+            "name": "test_recipe_to_dict",
+            "line": 55
+          },
+          {
+            "name": "test_extract_json_from_markdown",
+            "line": 77
+          },
+          {
+            "name": "test_extract_json_plain",
+            "line": 93
+          },
+          {
+            "name": "test_extract_json_invalid",
+            "line": 100
+          },
+          {
+            "name": "test_validate_recipe_data_valid",
+            "line": 106
+          },
+          {
+            "name": "test_validate_recipe_data_missing_field",
+            "line": 117
+          },
+          {
+            "name": "test_sanitize_recipe_adds_defaults",
+            "line": 126
+          },
+          {
+            "name": "test_sanitize_recipe_preserves_valid",
+            "line": 142
+          },
+          {
+            "name": "test_init",
+            "line": 166
+          },
+          {
+            "name": "test_build_prompt",
+            "line": 172
+          },
+          {
+            "name": "test_build_prompt_no_restrictions",
+            "line": 189
+          },
+          {
+            "name": "test_parse_response_valid",
+            "line": 201
+          },
+          {
+            "name": "test_parse_response_invalid",
+            "line": 231
+          },
+          {
+            "name": "test_generate_empty_ingredients",
+            "line": 239
+          }
+        ]
+      },
+      "imports": []
+    },
+    "tests/test_recommendation.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "TestRecommendationService",
+            "line": 31
+          }
+        ],
+        "functions": [
+          {
+            "name": "setup_database",
+            "line": 17
+          },
+          {
+            "name": "test_user",
+            "line": 25
+          },
+          {
+            "name": "test_get_top_ingredients_empty",
+            "line": 34
+          },
+          {
+            "name": "test_update_ingredient_usage",
+            "line": 41
+          },
+          {
+            "name": "test_get_cooking_stats_empty",
+            "line": 55
+          },
+          {
+            "name": "test_record_cooking",
+            "line": 65
+          },
+          {
+            "name": "test_get_cooking_calendar",
+            "line": 81
+          },
+          {
+            "name": "test_get_time_based_suggestion",
+            "line": 105
+          },
+          {
+            "name": "test_get_cuisine_distribution_empty",
+            "line": 112
+          },
+          {
+            "name": "test_get_cooking_streak",
+            "line": 119
+          },
+          {
+            "name": "test_get_highly_rated_recipes_empty",
+            "line": 138
+          }
+        ]
+      },
+      "imports": []
+    },
+    "tests/test_sharing.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "TestSharingService",
+            "line": 49
+          }
+        ],
+        "functions": [
+          {
+            "name": "setup_database",
+            "line": 17
+          },
+          {
+            "name": "test_user",
+            "line": 25
+          },
+          {
+            "name": "sample_recipe",
+            "line": 32
+          },
+          {
+            "name": "test_generate_share_id",
+            "line": 52
+          },
+          {
+            "name": "test_create_share_link",
+            "line": 62
+          },
+          {
+            "name": "test_generate_qr_code",
+            "line": 70
+          },
+          {
+            "name": "test_format_recipe_for_sharing",
+            "line": 81
+          },
+          {
+            "name": "test_enable_sharing",
+            "line": 93
+          },
+          {
+            "name": "test_enable_sharing_returns_same_id",
+            "line": 103
+          },
+          {
+            "name": "test_get_shared_recipe",
+            "line": 113
+          },
+          {
+            "name": "test_get_shared_recipe_invalid_id",
+            "line": 124
+          },
+          {
+            "name": "test_disable_sharing",
+            "line": 130
+          },
+          {
+            "name": "test_enable_sharing_nonexistent_recipe",
+            "line": 146
+          }
+        ]
+      },
+      "imports": []
+    },
+    "tests/test_user.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "TestUserRecipeService",
+            "line": 48
+          }
+        ],
+        "functions": [
+          {
+            "name": "setup_database",
+            "line": 16
+          },
+          {
+            "name": "test_user",
+            "line": 24
+          },
+          {
+            "name": "sample_recipe",
+            "line": 31
+          },
+          {
+            "name": "test_save_recipe",
+            "line": 51
+          },
+          {
+            "name": "test_get_saved_recipes",
+            "line": 63
+          },
+          {
+            "name": "test_get_saved_recipes_with_tag_filter",
+            "line": 73
+          },
+          {
+            "name": "test_get_recipe",
+            "line": 85
+          },
+          {
+            "name": "test_update_recipe",
+            "line": 96
+          },
+          {
+            "name": "test_delete_recipe",
+            "line": 117
+          },
+          {
+            "name": "test_get_all_tags",
+            "line": 127
+          },
+          {
+            "name": "test_empty_saved_recipes",
+            "line": 140
+          },
+          {
+            "name": "test_rating_bounds",
+            "line": 147
+          }
+        ]
+      },
+      "imports": []
+    },
+    "tests/test_vision.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "TestVisionService",
+            "line": 12
+          },
+          {
+            "name": "TestConfig",
+            "line": 76
+          }
+        ],
+        "functions": [
+          {
+            "name": "test_init",
+            "line": 15
+          },
+          {
+            "name": "test_encode_image",
+            "line": 21
+          },
+          {
+            "name": "test_build_prompt",
+            "line": 28
+          },
+          {
+            "name": "test_parse_ingredients_bullet_list",
+            "line": 35
+          },
+          {
+            "name": "test_parse_ingredients_numbered_list",
+            "line": 48
+          },
+          {
+            "name": "test_parse_ingredients_filters_non_ingredients",
+            "line": 61
+          },
+          {
+            "name": "test_config_values",
+            "line": 79
+          },
+          {
+            "name": "test_validate_with_api_key",
+            "line": 85
+          }
+        ]
+      },
+      "imports": []
+    },
+    "utils/__init__.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": ".image",
+          "kind": "relative"
+        }
+      ]
+    },
+    "utils/charts.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "plotly.express",
+          "kind": "direct"
+        },
+        {
+          "source": "plotly.graph_objects",
+          "kind": "direct"
+        },
+        {
+          "source": "calendar",
+          "kind": "direct"
+        }
+      ]
+    },
+    "utils/image.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "ImageProcessor",
+            "line": 6
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "PIL",
+          "kind": "named"
+        },
+        {
+          "source": "services.config",
+          "kind": "named"
+        },
+        {
+          "source": "io",
+          "kind": "direct"
+        }
+      ]
+    },
+    "utils/parser.py": {
+      "language": "python",
+      "symbols": {
+        "classes": [
+          {
+            "name": "RecipeParser",
+            "line": 5
+          }
+        ],
+        "functions": []
+      },
+      "imports": [
+        {
+          "source": "json",
+          "kind": "direct"
+        },
+        {
+          "source": "re",
+          "kind": "direct"
+        }
+      ]
+    }
+  }
+}
