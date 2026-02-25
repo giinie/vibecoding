@@ -34,3 +34,6 @@ build/
 
 # Windows null device artifact
 nul
+
+# User Configuration
+.opencode/
