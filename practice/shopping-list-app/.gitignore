@@ -1,3 +1,4 @@
 node_modules/
+.omc/
 .env
 server/db/*.db

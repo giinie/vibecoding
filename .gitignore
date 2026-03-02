@@ -71,4 +71,5 @@ tmp/
 정오표.xlsx
 
 # User Custom
+.omc/
 uv.lock
