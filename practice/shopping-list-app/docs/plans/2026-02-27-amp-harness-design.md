@@ -1,220 +1,235 @@
-# AmpCode Harness Skill Design
+# AI CLI Harness Skill Design (v2)
 
 ## Overview
 
-A skill family (`amp-*`) that enables Claude Code to delegate tasks to AmpCode CLI, combining Claude's strengths with AmpCode's multi-model capabilities (GPT-5.3-Codex Deep mode, GPT-5.2 Oracle, Librarian remote search).
+A skill family (`ai-*`) that enables Claude Code to delegate tasks to external AI CLI tools — **AmpCode**, **OpenAI Codex**, **Google Gemini** — combining Claude's strengths with each tool's unique capabilities.
 
-**Trigger**: Hybrid — Claude Code auto-detects delegation opportunities (with user confirmation) + manual `/amp` slash command.
+**Architecture**: "작업 스킬(what) + 프로바이더 실행기(how)" 분리 패턴.
 
 ## Requirements
 
-- **Hybrid trigger**: Auto-detection + `/amp` manual invocation
-- **User confirmation**: Auto-delegation asks user before executing (Amp credits are consumed)
-- **Delegation scope**: Cross-model review, deep analysis, remote code reference, parallel subagents, large refactoring, team-shared review
-- **Result handling**: Claude Code synthesizes Amp results into a comparative report
+- **Hybrid trigger**: Auto-detection + `/ai` manual invocation
+- **User confirmation**: Auto-delegation always asks before executing
+- **Multi-provider**: Amp, Codex, Gemini — single interface, provider selectable
+- **Result handling**: Claude synthesizes external results into comparative reports
 - **Installation**: Global (`~/.claude/skills/`)
-- **Mandatory flags**: `--no-ide --no-notifications` on all `amp` CLI calls
+- **Security**: Full autonomy requires explicit confirmation; read-only by default
 
 ## Architecture
 
 ```
 User
   │
-  ├─[auto] "리뷰해줘" → Claude Code detects → selects amp-* Skill
-  │                       → asks user confirmation → executes
+  ├─[auto] "리뷰해줘" → Claude Code detects → selects ai-* skill
+  │                       → asks confirmation → picks provider → executes
   │
-  └─[manual] "/amp deep 분석해줘" → amp-delegate Skill
-                                    → parses mode + prompt → executes
+  └─[manual] "/ai deep ..." or "/ai codex ..." → ai-delegate skill
+                                                  → parses provider + mode → executes
 
 Claude Code (orchestrator)
   │
-  ├─ amp-review     → Cross-model code review
-  ├─ amp-deep       → Deep analysis (GPT-5.3-Codex)
-  ├─ amp-research   → Remote codebase reference (Librarian)
-  ├─ amp-parallel   → Parallel subagent file processing
-  └─ amp-delegate   → Universal router + /amp entry point
+  ├─ ai-deep       → Deep analysis (any provider)
+  ├─ ai-review     → Cross-model code review (any provider)
+  ├─ ai-research   → Remote codebase reference (any provider)
+  ├─ ai-parallel   → Parallel file processing (any provider)
+  └─ ai-delegate   → Universal router + common conventions
         │
-        ▼
-  AmpCode CLI
-    amp --no-ide --no-notifications [-m mode] -x "prompt"
+        ├─▶ AmpCode CLI    → amp --no-ide --no-notifications [-m mode] -x "prompt"
+        ├─▶ Codex CLI      → codex exec [-a mode] "prompt"
+        └─▶ Gemini CLI     → gemini -p [-m model] "prompt"
 ```
+
+## Provider Reference
+
+### AmpCode CLI (`amp`)
+
+| Item | Value |
+|------|-------|
+| Install | `curl -fsSL https://ampcode.com/install.sh \| bash` |
+| Non-interactive | `amp --no-ide --no-notifications -x "prompt"` |
+| Mode select | `-m smart` (default), `-m deep`, `-m rush` |
+| Full autonomy | `--dangerously-allow-all` |
+| Unique | Librarian (remote codebase search), subagent parallelism, Oracle |
+
+### OpenAI Codex CLI (`codex`)
+
+| Item | Value |
+|------|-------|
+| Install | `npm install -g @openai/codex` |
+| Non-interactive | `codex exec "prompt"` |
+| Approval | `-a suggest` (default), `-a auto-edit`, `-a never` |
+| Sandbox | `--sandbox read-only \| workspace-write \| full-auto` |
+| Structured output | `--json` |
+| Config override | `-c key=value` (e.g., `-c model_reasoning_effort=high`) |
+| Resume | `codex exec resume --last "prompt"` |
+| Unique | Sandboxed execution, apply_patch, built-in security |
+
+### Google Gemini CLI (`gemini`)
+
+| Item | Value |
+|------|-------|
+| Install | `npm install -g @google/gemini-cli` |
+| Non-interactive | `gemini -p "prompt"` or `gemini "prompt"` |
+| Auto-approve | `--yolo` (`-y`) |
+| Model select | `-m gemini-2.5-flash`, `-m gemini-2.5-pro` |
+| Structured output | `--output-format json` |
+| Full context | `--all-files` (`-a`) |
+| Checkpointing | `--checkpointing` (auto file snapshots) |
+| Sandbox | `--sandbox` (Docker/Podman) |
+| Unique | Flash model (fast/cheap), checkpointing, Google search |
 
 ## Skill Definitions
 
-### 1. amp-delegate (Universal Router)
+### 1. ai-delegate (Universal Router)
 
-**Location**: `~/.claude/skills/amp-delegate/SKILL.md`
+**Location**: `~/.claude/skills/ai-delegate/SKILL.md`
 
-**Role**: Entry point for `/amp` manual calls and fallback for unmatched delegation.
+**Role**: Entry point for `/ai` manual calls, common conventions, provider CLI reference.
 
-**Description keywords**: delegate, amp, forward, AmpCode, 위임, send to amp
+**Parse rules**:
+- `/ai deep ...` → provider=amp, mode=deep
+- `/ai codex ...` → provider=codex
+- `/ai gemini ...` → provider=gemini
+- `/ai rush ...` → provider=amp, mode=rush
+- `/ai ...` → provider=amp, mode=smart (default)
 
-**Internal logic**:
-1. Parse mode hint from prompt (`/amp deep ...`, `/amp rush ...`, default smart)
-2. Execute: `amp --no-ide --no-notifications -m {mode} -x "{prompt}"`
-3. Synthesize result and report to user
+**Contains**: Provider CLI reference, common conventions, error handling table,
+security guard rails, prompt delivery strategy.
 
-### 2. amp-review (Cross-Model Code Review)
+### 2. ai-deep (Deep Analysis)
 
-**Location**: `~/.claude/skills/amp-review/SKILL.md`
+**Location**: `~/.claude/skills/ai-deep/SKILL.md`
 
-**Role**: Delegate code review to GPT family for cross-model verification.
+**Role**: Extended autonomous reasoning for complex problems.
 
-**Description keywords**: review, verify, second opinion, cross-check, validate, audit, blind spot, different perspective, 다른 관점, 검증, 교차 검증
+**Default provider**: amp (deep mode)
 
-**Internal logic**:
-1. Collect review targets (git diff, specified files)
-2. Construct review prompt with code context
-3. Execute: `amp --no-ide --no-notifications -m deep -x "review prompt"`
-4. Compare Amp results with Claude's own analysis in a comparison table
+**Provider commands**:
+- amp: `amp --no-ide --no-notifications -m deep --dangerously-allow-all -x "prompt"`
+- codex: `codex exec -a never -c model_reasoning_effort=high "prompt"`
+- gemini: `gemini -p --yolo -m gemini-2.5-pro "prompt"`
 
-**Auto-trigger conditions**:
-- User asks for "different perspective" or "second opinion"
-- User mentions a specific non-Claude model (GPT, etc.)
-- Security/architecture review where cross-validation adds value
+**Timeout**: 900 seconds
 
-### 3. amp-deep (Deep Analysis)
+### 3. ai-review (Cross-Model Review)
 
-**Location**: `~/.claude/skills/amp-deep/SKILL.md`
+**Location**: `~/.claude/skills/ai-review/SKILL.md`
 
-**Role**: Delegate complex analysis tasks to GPT-5.3-Codex Deep mode (5-15 min autonomous thinking).
+**Role**: Code review from a different model family for cross-validation.
 
-**Description keywords**: deep analysis, complex bug, root cause, refactoring plan, architecture, investigate, hard problem, thorny issue, 깊은 분석, 복잡한 버그, 근본 원인
+**Default provider**: amp (deep mode)
 
-**Internal logic**:
-1. Construct detailed context prompt
-2. Execute: `amp --no-ide --no-notifications -m deep --dangerously-allow-all -x "prompt"`
-3. Timeout: 300 seconds (5 minutes)
-4. Summarize and report results
+**Provider commands** (read-only, no full autonomy needed):
+- amp: `amp --no-ide --no-notifications -m deep -x "prompt"`
+- codex: `codex exec -a suggest --sandbox read-only "prompt"`
+- gemini: `gemini -p -m gemini-2.5-pro "prompt"`
 
-**Auto-trigger conditions**:
-- Multi-file bug with unclear root cause
-- Large-scale refactoring planning
-- Performance bottleneck investigation
-- Architecture redesign requiring extended reasoning
+**Timeout**: 300 seconds
 
-### 4. amp-research (Remote Codebase Reference)
+### 4. ai-research (Remote Codebase Reference)
 
-**Location**: `~/.claude/skills/amp-research/SKILL.md`
+**Location**: `~/.claude/skills/ai-research/SKILL.md`
 
-**Role**: Search remote codebases via AmpCode's Librarian tool.
+**Role**: Search remote codebases for reference implementations.
 
-**Description keywords**: reference implementation, how others do it, library usage, open source example, pattern search, GitHub search, codebase search, 참조 구현, 오픈소스 예시
+**Default provider**: amp (Librarian tool)
 
-**Internal logic**:
-1. Construct search prompt targeting Librarian tool
-2. Execute: `amp --no-ide --no-notifications -x "Use librarian to search: {query}"`
-3. Filter and contextualize results for current project
+**Provider commands** (read-only):
+- amp: `amp --no-ide --no-notifications -x "Use librarian to search: {query}"`
+- codex: `codex exec --search "prompt"`
+- gemini: `gemini -p "prompt"`
 
-**Auto-trigger conditions**:
-- User asks how something is implemented elsewhere
-- Need to find library best practices
-- Looking for reference implementations or patterns
+**Timeout**: 180 seconds
 
-### 5. amp-parallel (Parallel Subagent Processing)
+### 5. ai-parallel (Parallel Batch Processing)
 
-**Location**: `~/.claude/skills/amp-parallel/SKILL.md`
+**Location**: `~/.claude/skills/ai-parallel/SKILL.md`
 
-**Role**: Batch-process multiple independent files via AmpCode's subagent system.
+**Role**: Batch-process multiple independent files via external CLI.
 
-**Description keywords**: parallel, batch, multiple files, convert all, migrate, each file, simultaneously, concurrent, 병렬, 일괄, 모든 파일
+**Default provider**: amp (subagent system)
 
-**Internal logic**:
-1. Collect target file list and task description
-2. Execute: `amp --no-ide --no-notifications --dangerously-allow-all -x "Use N subagents to {task}: {files}"`
-3. Report changed files and results
+**Provider commands** (full autonomy required):
+- amp: `amp --no-ide --no-notifications --dangerously-allow-all -x "Use N subagents..."`
+- codex: `codex exec -a never "prompt"`
+- gemini: `gemini -p --yolo --checkpointing "prompt"`
 
-**Auto-trigger conditions**:
-- 5+ files need the same transformation
-- Batch migration or conversion tasks
-- Independent file-level operations
+**Timeout**: 900 seconds
 
-## Auto-Detection Logic
+## Auto-Detection Trigger Matrix
 
-### Trigger Matrix
-
-| User Signal | Triggered Skill | Detection Basis |
+| User Signal | Triggered Skill | Default Provider |
 |-------------|----------------|-----------------|
-| "다른 관점에서 봐줘" | amp-review | "second opinion", "different perspective" |
-| "복잡한 버그 추적" | amp-deep | "complex bug", "root cause", "investigate" |
-| "다른 프로젝트 참조" | amp-research | "reference", "how others", "pattern search" |
-| "이 파일들 전부 변환" (5+) | amp-parallel | "all files", "batch", "convert each" |
-| `/amp ...` | amp-delegate | manual invocation |
-| "GPT로 리뷰" | amp-review | explicit model request |
-| "deep 모드로 분석" | amp-deep | explicit mode request |
+| "다른 관점에서 봐줘" / "second opinion" | ai-review | amp (deep) |
+| "복잡한 버그 추적" / "root cause" | ai-deep | amp (deep) |
+| "다른 프로젝트 참조" / "how others do it" | ai-research | amp |
+| "이 파일들 전부 변환" (5+ files) | ai-parallel | amp |
+| `/ai ...` | ai-delegate | amp (smart) |
+| "GPT로 리뷰" | ai-review | amp (deep) |
+| "Codex로 분석" | ai-deep | codex |
+| "Gemini로 검색" | ai-research | gemini |
+
+## Common Conventions
 
 ### User Confirmation Flow
-
-When auto-detecting, Claude Code presents:
-
 ```
-이 작업은 AmpCode {mode}({model})로 위임하면 효과적일 것 같습니다.
+이 작업을 외부 AI CLI에 위임합니다.
 
-  위임 유형: {type}
-  모드: {Deep (GPT-5.3) | Smart (Claude Opus) | Rush}
-  예상 이점: {benefit description}
+  프로바이더: {provider}
+  실행 명령: {sanitized_command}
+  권한 수준: {read-only | file write | full autonomy}
+  ⚠️ 주의: {warnings if full autonomy enabled}
 
 진행할까요?
 ```
 
-User approves → Skill executes. User declines → Claude Code handles internally.
-
-## Synthesis Report Template
-
-```markdown
-## Amp 위임 결과 종합
-
-**위임 유형**: {delegation type}
-**모드**: {mode (model)}
-**소요 시간**: {duration}
-
-### Amp 분석 결과
-{summarized Amp response}
-
-### Claude 자체 분석과의 비교
-| 항목 | Claude (Opus 4.6) | Amp ({model}) |
-|------|-------------------|---------------|
-| ... | ... | ... |
-
-### 종합 권장사항
-1. [양쪽 공통] Priority items
-2. [한쪽만 지적] Items for further review
-```
-
-## Error Handling
+### Error Handling
 
 | Error | Recovery |
 |-------|----------|
-| `amp` CLI not installed | Show installation guide |
-| Amp credits exhausted | Report error + offer Claude-only fallback |
-| Timeout (>5 min) | Abort + Claude handles internally |
-| Amp execution error | Report error + Claude fallback |
+| CLI not installed | Show provider-specific install command |
+| Auth error / token expired | Guide re-authentication |
+| Credit/quota exhausted | Report + offer alternative provider or Claude fallback |
+| Network error | Report + retry once, then fallback |
+| Timeout | Report + Claude handles internally |
+| Non-zero exit | Show stderr summary + Claude fallback |
+| Empty response | Retry once, then fallback |
+| Output truncated | Save to temp file + summarize |
 
-## Prompt Size Strategy
+### Prompt Size Strategy
 
-When passing code to Amp:
+| Size | Method | Notes |
+|------|--------|-------|
+| < 100 lines | Inline in CLI argument | All providers |
+| 100-500 lines | stdin pipe | `cat file \| {cli}` |
+| > 500 lines | Pass file paths | CLI reads directly (recommended) |
 
-1. **Small** (<100 lines): Inline in prompt argument
-2. **Medium** (100-500 lines): Pipe via stdin
-3. **Large** (>500 lines): Pass file paths — Amp reads files directly (recommended)
+### Security Guard Rails
 
-## Mandatory CLI Flags
+1. Full autonomy flags require explicit user confirmation
+2. Check `git status` before write operations — warn if dirty
+3. Scan target files for sensitive content (.env, keys, credentials)
+4. Prefer read-only mode first; escalate only if needed
+5. Never pass secrets in CLI prompts
 
-All `amp` invocations MUST include:
-- `--no-ide`: Prevent IDE connection attempts (causes delay/errors in programmatic mode)
-- `--no-notifications`: Suppress sound notifications
+### Timeout Guidelines
 
-Base command pattern:
-```bash
-amp --no-ide --no-notifications [-m mode] [-x] "prompt"
-```
+| Task Type | Timeout | Rationale |
+|-----------|---------|-----------|
+| Quick/rush | 120s | Simple, well-defined tasks |
+| Standard | 180s | General delegation |
+| Review/research | 300s | Read-only analysis |
+| Deep analysis | 900s | Extended autonomous reasoning |
+| Parallel batch | 900s | Multiple file processing |
 
-## Testing Strategy
+## Changes from v1
 
-| Test | Method |
-|------|--------|
-| CLI existence | `which amp` check |
-| Basic execution | `amp --no-ide --no-notifications -x "echo test"` |
-| Deep mode | `amp --no-ide --no-notifications -m deep -x "1+1?"` + timeout check |
-| Large prompt | stdin pipe with file content |
-| Error recovery | Simulate amp failure → verify Claude fallback |
+| Area | v1 (amp-* only) | v2 (ai-* multi-provider) |
+|------|-----------------|-------------------------|
+| Naming | `amp-delegate`, `amp-deep`, ... | `ai-delegate`, `ai-deep`, ... |
+| Providers | AmpCode only | Amp + Codex + Gemini |
+| Model refs | Hardcoded ("GPT-5.3-Codex", "Opus 4.6") | Mode/provider-centric |
+| Deep timeout | 300s (too short) | 900s |
+| Error handling | Basic (4 cases) | Extended (8 cases) |
+| Security | Minimal | Pre-exec checklist + guard rails |
+| Common conventions | Duplicated across skills | Centralized in ai-delegate |
