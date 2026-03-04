@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { TOKEN_KEY } from './authApi';
+import { getToken } from './authApi';
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
 
@@ -10,7 +10,7 @@ export function connect() {
     socket.disconnect();
   }
 
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token = getToken();
 
   socket = io(SOCKET_URL, {
     auth: { token },

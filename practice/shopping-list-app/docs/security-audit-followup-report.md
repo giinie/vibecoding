@@ -3,6 +3,7 @@
 > **작성일**: 2026-02-16
 > **브랜치**: `practice`
 > **이전 작업**: Phase 1-4 보안 강화 (JWT, helmet, rate limiting, input validation, UUID 검증 등)
+> **상태**: 완전 구현 완료. 결정 기록 용도로 보존.
 
 ---
 
@@ -23,8 +24,10 @@ Phase 1-4 보안 강화 구현 후, 보안 전문가 + 코드 리뷰어의 최�
 | A-2 | typeof 타입 검증 | `notificationController.js` | `title`, `message`에 `typeof !== 'string'` 체크 추가 |
 | A-3 | notification type 앱 레벨 검증 | `notificationController.js` | `VALID_TYPES` 배열로 DB 도달 전 조기 검증 |
 | A-4 | bcrypt 에러 처리 | `userModel.js` | `verifyPassword()`에 try-catch, 실패 시 `false` 반환 |
-| A-5 | 이메일 정규화 | `auth.js`, `userModel.js` | `toLowerCase().trim()` + `LOWER(email) = LOWER(?)` |
+| A-5 | 이메일 정규화 | `auth.js`, `userModel.js` | `toLowerCase().trim()` + `LOWER(email) = LOWER(?)` *[후속 변경 있음]* |
 | A-6 | POST body user_id UUID 검증 | `notificationController.js` | URL param은 미들웨어로, body는 컨트롤러 내 직접 검증 |
+
+> **A-5 후속 변경 (2026-02-23)**: 앱 레벨 정규화(`toLowerCase().trim()`)가 충분하므로 SQL을 `email=?` 직접 비교로 변경 — 인덱스 활용 개선.
 
 ### Phase B: Server Configuration Fixes (3건)
 
@@ -86,10 +89,10 @@ Time:        2.352s
 
 ## 범위 외 (별도 계획 필요)
 
-| 항목 | 이유 |
-|------|------|
-| JWT 토큰 폐기 메커니즘 | Redis/DB 블랙리스트 필요 (아키텍처 변경) |
-| localStorage → httpOnly 쿠키 | 서버 세션 관리 전환 필요 |
-| WebSocket Rate Limiting | 추가 미들웨어/라이브러리 필요 |
-| 계정 열거 방지 (409 → 400) | UX 트레이드오프 논의 필요 |
-| HTTPS 강제 | 배포 환경 의존적 |
+| 항목 | 이유 | 상태 |
+|------|------|------|
+| JWT 토큰 폐기 메커니즘 | Redis/DB 블랙리스트 필요 (아키텍처 변경) | 미해결 |
+| localStorage → httpOnly 쿠키 | 서버 세션 관리 전환 필요 | 미해결 |
+| WebSocket Rate Limiting | 추가 미들웨어/라이브러리 필요 | 미해결 |
+| 계정 열거 방지 (409 → 400) | UX 트레이드오프 논의 필요 | 미해결 |
+| HTTPS 강제 | 배포 환경 의존적 | 미해결 |

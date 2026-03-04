@@ -43,22 +43,26 @@ export default function useNotifications(userId) {
     loadNotifications(nextPage, true);
   }, [page, loadNotifications]);
 
+  const applyReadToOne = useCallback((id) => {
+    setNotifications(prev =>
+      prev.map(n => {
+        if (n.id === id && !n.isRead) {
+          setUnreadCount(c => Math.max(0, c - 1));
+          return { ...n, isRead: true };
+        }
+        return n;
+      })
+    );
+  }, []);
+
   const markAsRead = useCallback(async (id) => {
     try {
       await api.markAsRead(id);
-      setNotifications(prev =>
-        prev.map(n => {
-          if (n.id === id && !n.isRead) {
-            setUnreadCount(c => Math.max(0, c - 1));
-            return { ...n, isRead: true };
-          }
-          return n;
-        })
-      );
+      applyReadToOne(id);
     } catch (err) {
       setError(err.message);
     }
-  }, []);
+  }, [applyReadToOne]);
 
   const markAllAsRead = useCallback(async () => {
     try {
@@ -102,15 +106,7 @@ export default function useNotifications(userId) {
     });
 
     const unsubRead = onNotificationRead(({ id }) => {
-      setNotifications(prev =>
-        prev.map(n => {
-          if (n.id === id && !n.isRead) {
-            setUnreadCount(c => Math.max(0, c - 1));
-            return { ...n, isRead: true };
-          }
-          return n;
-        })
-      );
+      applyReadToOne(id);
     });
 
     const unsubReadAll = onAllNotificationsRead(() => {
@@ -123,11 +119,12 @@ export default function useNotifications(userId) {
       unsubRead();
       unsubReadAll();
     };
-  }, [onNewNotification, onNotificationRead, onAllNotificationsRead, addNotification]);
+  }, [onNewNotification, onNotificationRead, onAllNotificationsRead, addNotification, applyReadToOne]);
 
   return {
     notifications,
     unreadCount,
+    hasUnread: unreadCount > 0,
     loading,
     error,
     hasMore,

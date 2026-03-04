@@ -5,14 +5,37 @@
 
 ## [Unreleased]
 
-### Changed
-- AI slop 정리 적용 (`/deslop apply`) (2026-02-25)
+### 2026-03-04
+
+#### Changed
+- 코드 품질 리팩토링 (`/simplify`)
+  - `server/middleware/validateUuid.js`: `UUID_REGEX`를 export하여 공유 상수로 전환
+  - `server/controllers/notificationController.js`: 로컬 `UUID_REGEX` 제거, `validateUuid.js`에서 import
+  - `server/routes/auth.js`: `signToken()` 헬퍼 추출, `EMAIL_REGEX` 모듈 스코프로 이동
+  - `server/index.js`: `CORS_ORIGIN` 상수 추출, `rateLimitDefaults` 공유 설정 추출
+  - `server/websocket/socketManager.js`: `initializeSocket()`에 `corsOrigin` 파라미터 추가
+  - `server/db/migrate.js`: `closeDatabase()`를 CLI 진입점으로 한정 (서버 시작 시 DB 재연결 방지)
+  - `server/models/notificationModel.js`: 3개 SQL 쿼리를 1개 집계 쿼리로 통합
+  - `client/src/services/socketService.js`, `notificationApi.js`: `TOKEN_KEY` 직접 접근 → `getToken()` 사용
+  - `client/src/hooks/useNotifications.js`: `applyReadToOne` 헬퍼 추출, `hasUnread` 반환값 추가
+
+### 2026-02-25
+
+#### Changed
+- AI slop 정리 적용 (`/deslop apply`)
   - `client/src/services/socketService.js`: connect/disconnect `console.log`에 NODE_ENV 개발 환경 가드 추가, `REACT_APP_SOCKET_URL` 환경변수 지원
   - `client/src/services/authApi.js`: `BASE_URL`에 `REACT_APP_API_URL` 환경변수 폴백 추가
   - `client/src/services/notificationApi.js`: `BASE_URL`에 `REACT_APP_API_URL` 환경변수 폴백 추가
   - `server/controllers/notificationController.js`: `UUID_REGEX`, `VALID_TYPES` 상수를 모듈 레벨로 호이스팅
   - `server/db/migrate.js`: 성공 `console.log`를 `require.main` 가드 안으로 이동
-- 문서와 코드 상태 동기화 (`/sync-docs apply`) (2026-02-23)
+
+#### Added
+- `docs/slop-cleanup-report.md` AI slop 정리 보고서
+
+### 2026-02-23
+
+#### Changed
+- 문서와 코드 상태 동기화 (`/sync-docs apply`)
   - `CLAUDE.md`: 하드코딩 USER_ID 설명을 JWT 로그인 플로우 설명으로 교체
   - `docs/security-recommendations.md`: JWT 인증 항목(#5, #6) 상태를 "해결"로 업데이트
   - `server/websocket/socketManager.js`: disconnect 로그에 NODE_ENV 개발 환경 가드 추가
@@ -20,13 +43,12 @@
   - `server/db/schema.sql`: 단일 컬럼 인덱스 3개를 복합 인덱스 2개로 교체 (`user_id, created_at DESC` / `user_id, is_read`) — 임시 B-tree 정렬 제거
   - `server/models/userModel.js`: `LOWER(email)=LOWER(?)` → `email=?` 직접 비교로 변경 — 풀 테이블 스캔 제거
 
-### Added
+#### Added
 - `.env.example` 환경 변수 템플릿 파일 생성
-- `docs/slop-cleanup-report.md` AI slop 정리 보고서
 
 ---
 
-## [0.3.0] - 2026-02-16
+## [0.3.0] - 2026-02-16 (보안 강화)
 
 ### Added
 - 회원가입 및 로그인 입력 검증 (이름, 이메일, 비밀번호 형식 검사)
@@ -50,7 +72,7 @@
 
 ---
 
-## [0.2.0] - 2026-02-16
+## [0.2.0] - 2026-02-16 (JWT 인증 도입)
 
 ### Added
 - JWT 인증 시스템 도입 (`jsonwebtoken`, `bcryptjs`)
@@ -68,7 +90,7 @@
 ### Changed
 - 인증 방식을 `x-user-id` 헤더 → JWT Bearer 토큰으로 전환
 - WebSocket 인증을 `query.userId` → `auth.token` JWT 검증으로 전환
-- `TOKEN_KEY` 상수 재사용으로 토큰 키 이름 일관성 확보
+- `TOKEN_KEY` 상수 재사용으로 토큰 키 이름 일관성 확보 *(이후 2026-03-04에 `getToken()` 헬퍼로 전환, 모듈이 `localStorage`를 직접 접근하지 않도록 개선)*
 - 기존 테스트를 JWT 인증 기반으로 전면 수정
 
 ### Security

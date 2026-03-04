@@ -1,6 +1,7 @@
 # Shopping List App 개선 로드맵
 
 > **생성일**: 2026-03-02
+> **마지막 업데이트**: 2026-03-04 (코드 simplify 리팩토링 반영)
 > **분석 방법**: CCG (Claude-Codex-Gemini) 트라이 모델 아키텍처/UI 병렬 감사
 > **분석 대상**: 백엔드 아키텍처 (Architect/opus) + 프론트엔드 UI (Designer/sonnet)
 
@@ -18,7 +19,7 @@
 | 컴포넌트 구현 | **양호** | 접근성 기본 요소, 낙관적 UI 패턴 |
 | UX 완성도 | **보통** | 로딩/에러 처리 기본만 존재, toast 없음 |
 | 접근성/반응형 | **미흡** | 미디어 쿼리 전무, 색상 대비 미달 |
-| 테스트 | **양호** | 56개 테스트, 격리 패턴 우수 |
+| 테스트 | **양호** | 69개 테스트, 격리 패턴 우수 |
 
 ---
 
@@ -48,8 +49,11 @@
 
 ### 1.3 401 응답 시 React 상태 초기화
 
-- **파일**: `client/src/services/notificationApi.js:13-19`, `client/src/App.js`
+- **파일**: `client/src/services/notificationApi.js`, `client/src/App.js`
 - **문제**: `handleErrorResponse()`가 401 시 `logout()` 호출 → localStorage만 삭제, React `userId` 상태는 유효한 채로 남음. UI는 로그인 상태인데 API만 실패하는 불일치.
+
+> **2026-03-04 업데이트**: 리팩토링으로 `notificationApi.js`가 `getToken()`을 사용하도록 변경됨. `handleErrorResponse` 로직은 동일.
+
 - **작업**:
   - [ ] App 레벨에서 401 감지 시 `setUserId(null)` 호출하는 콜백 연결
   - [ ] 방법 1: 커스텀 이벤트 (`window.dispatchEvent`) 활용
@@ -113,7 +117,7 @@
 
 ### 2.5 등록 응답에서 명시적 password_hash 제거
 
-- **파일**: `server/routes/auth.js:40`
+- **파일**: `server/routes/auth.js` (register 라우트의 응답 부분)
 - **문제**: `password_hash` 제거가 `findById` 쿼리의 컬럼 선택에 암묵적 의존. `findById`가 `SELECT *`로 변경되면 해시 노출 위험.
 - **작업**:
   - [ ] 로그인 라우트와 동일하게 `{ password_hash, ...safeUser } = user` 패턴 적용
@@ -182,12 +186,16 @@
   - [ ] `POST /api/auth/refresh` 엔드포인트
   - [ ] 클라이언트에서 401 시 자동 refresh 시도
 - **예상 변경량**: 5+ 파일, ~100줄
-- **참고**: Phase 1.3의 401 처리 개선이 선행되어야 함
+
+> **2026-03-04 업데이트**: Phase 1.3의 401 처리 개선이 선행되어야 함.
 
 ### 3.6 낙관적 UI 롤백 구현
 
 - **파일**: `client/src/hooks/useNotifications.js`
 - **문제**: `markAsRead` 실패 시 이미 `isRead: true`로 변경된 UI가 원상복구되지 않음.
+
+> **2026-03-04 업데이트**: 리팩토링으로 mark-as-read 로직이 `applyReadToOne` 헬퍼로 통합됨. 롤백 구현 시 이 헬퍼의 역연산을 추가하면 됨.
+
 - **작업**:
   - [ ] API 호출 전 이전 상태 스냅샷 저장
   - [ ] catch 블록에서 이전 상태로 롤백
@@ -221,7 +229,8 @@
   - [ ] WebSocket 이벤트: 리스트 공유 시 실시간 동기화
   - [ ] 기존 알림 시스템과 연동 (아이템 추가/구매 시 알림)
 - **예상 변경량**: 10+ 파일, ~500줄
-- **참고**: 가장 큰 작업이지만 앱의 존재 이유
+
+> **2026-03-04 업데이트**: 가장 큰 작업이지만 앱의 존재 이유.
 
 ### 4.2 DB 마이그레이션 버전 관리
 

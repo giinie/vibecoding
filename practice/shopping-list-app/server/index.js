@@ -20,8 +20,10 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
+
 // Initialize Socket.io
-initializeSocket(server);
+initializeSocket(server, CORS_ORIGIN);
 
 // Trust proxy for rate limiter behind reverse proxy
 if (process.env.TRUST_PROXY) {
@@ -30,25 +32,19 @@ if (process.env.TRUST_PROXY) {
 
 // Security middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
+app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '10kb' }));
 
 // Rate limiters
-const authLimiter = rateLimit({
+const rateLimitDefaults = {
   windowMs: 15 * 60 * 1000,
-  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
-});
+};
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later' },
-});
+const authLimiter = rateLimit({ ...rateLimitDefaults, max: 20 });
+const apiLimiter = rateLimit({ ...rateLimitDefaults, max: 100 });
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);

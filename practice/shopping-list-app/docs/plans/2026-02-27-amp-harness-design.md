@@ -1,3 +1,7 @@
+> **[ARCHIVED]** 이 문서의 amp-* 설계는 ai-* 스킬로 대체되었습니다 (2026-03-04).
+> 스킬명 매핑: amp-delegate → ai-delegate, amp-review → ai-review, amp-deep → ai-deep, amp-parallel → ai-parallel.
+> 현행 리뷰: `docs/plans/2026-03-04-ai-skills-review.md`
+
 # AI CLI Harness Skill Design (v2)
 
 ## Overview

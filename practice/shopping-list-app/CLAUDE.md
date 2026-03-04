@@ -2,18 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
-
 ## Critical Rules
 
 - **MUST** set `JWT_SECRET` in `.env` before starting the server — it exits immediately without it. Tests set `process.env.JWT_SECRET = 'test-jwt-secret-key'` in `setupTestDatabase()`.
 - **MUST** call `setupTestDatabase()` before `createTestServer()` in tests — order matters because tests monkey-patch `server/db/connection.js` via module cache. Reversing the order breaks test isolation.
-- **MUST** use UUID v4 format for any `userId` route parameter in tests. The default `test-user-1` string will be rejected by `validateUuid` middleware. Use `crypto.randomUUID()` or a fixed UUID like `'550e8400-e29b-41d4-a716-446655440000'`.
+- **MUST** use UUID v4 format for any `userId` route parameter in tests. The default `test-user-1` string will be rejected by `validateUuid` middleware. Use `crypto.randomUUID()` or a fixed UUID like `'550e8400-e29b-41d4-a716-446655440000'`. **Note**: `seedTestUser()` defaults to `'test-user-1'` — always pass an explicit UUID: `seedTestUser('550e8400-e29b-41d4-a716-446655440000')`.
 - **MUST** transform `is_read` at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`).
 - **MUST** use `handleErrorResponse()` in `notificationApi.js` for all new API functions — it calls `logout()` on 401 to preserve the auto-logout contract.
-- **Notification create validation**: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+- **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+
+## Project Overview
+
+Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
 
 ## First-time Setup
 
@@ -37,6 +37,22 @@ npx jest tests/integration/notification.api.test.js  # Single test file
 npm run migrate                # DB migration (also auto-runs on start)
 npm run seed                   # Seed sample data
 ```
+
+## Key Patterns
+
+- **DB connection singleton**: `getDatabase()` lazily creates the connection. WHY: lazy init allows tests to monkey-patch `connection.js` before the module loads — eager init would prevent injection.
+- **Migration lifecycle**: `migrate()` does NOT close the DB connection — callers manage lifecycle. Only the CLI entry (`require.main === module`) calls `closeDatabase()`. WHY: prevents the server from closing and re-opening the connection on every startup.
+- **Module cache clearing in tests**: `teardownTestDatabase()` deletes `require.cache` entries for all server modules. WHY: ensures fresh state between test suites when DB connection is replaced.
+- **WebSocket event flow**: Controller actions emit Socket.io events after DB writes. The client `useSocket` hook subscribes for real-time UI updates.
+- **UUID_REGEX shared constant**: Defined and exported from `validateUuid.js`. The controller imports it for body-field validation. WHY: single source of truth prevents regex drift.
+- **UUID primary keys**: All entities use `uuid` v4, generated server-side. WHY: avoids integer ID enumeration attacks.
+- **JWT auth flow**: `authenticate` extracts `Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`. Token signing uses `signToken()` helper in `auth.js`.
+- **CORS_ORIGIN**: Defined once in `index.js` and passed to both Express CORS middleware and `initializeSocket()`. WHY: single config point prevents HTTP/WebSocket CORS drift.
+- **Token access**: All client modules MUST use `getToken()` from `authApi.js` to read the JWT token. Never access `localStorage` directly for the token.
+- **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT. Always seed user before creating token. **Caution**: `seedTestUser()` defaults to non-UUID `'test-user-1'` — always pass an explicit UUID.
+- **Auto-logout on 401**: `handleErrorResponse()` in `notificationApi.js` calls `logout()` on 401. All API functions MUST use this helper.
+- **useNotifications return values**: Returns `hasUnread` (boolean) derived from `unreadCount`. `NotificationDropdown` and `NotificationList` currently compute `hasUnread` locally via `notifications.some(n => !n.isRead)` — prefer using `hasUnread` from `useNotifications()` when refactoring.
+- **Pagination constant**: `ITEMS_PER_PAGE = 5` in `useNotifications.js`. Hardcoded — do not add a separate constant elsewhere.
 
 ## Environment Variables
 
@@ -68,7 +84,7 @@ server/routes/auth.js                    → POST /register, POST /login
 server/routes/notifications.js           → Notification CRUD routes (JWT required)
 server/controllers/notificationController.js → Request handling, delegates to models
 server/middleware/auth.js                → JWT authenticate + authorizeUser middleware
-server/middleware/validateUuid.js         → UUID format validation middleware
+server/middleware/validateUuid.js         → UUID format validation middleware + UUID_REGEX export
 server/models/notificationModel.js       → Notification data access (better-sqlite3)
 server/models/userModel.js               → User CRUD with bcrypt password hashing
 server/db/connection.js                  → Singleton DB connection (lazy-initialized)
@@ -111,16 +127,17 @@ client/src/components/NotificationItem.js     → Single notification item
 client/src/components/ErrorBoundary.js        → React error boundary wrapper
 ```
 
-- JWT token stored in `localStorage` under `TOKEN_KEY` constant (defined in `authApi.js`). The `authHeaders()` helper in `notificationApi.js` reads from this key for every API request.
+- JWT token stored in `localStorage` under `TOKEN_KEY` constant (defined in `authApi.js`). All modules access the token via `getToken()` from `authApi.js` — never read `localStorage` directly.
 - `App.js` implements JWT login/logout flow; `userId` from login response, managed in React state.
 
 ### Tests (`tests/`)
 
-Integration tests using Jest + Supertest with in-memory SQLite:
+Integration and unit tests using Jest + Supertest with in-memory SQLite:
 
 - `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()`.
 - `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port.
-- 7 test suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `notificationApi.test.js`, `notificationTransform.test.js`.
+- `tests/integration/` — 5 suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`.
+- `tests/unit/` — 2 suites: `notificationApi.test.js`, `notificationTransform.test.js`.
 
 ### API Endpoints
 
@@ -148,13 +165,4 @@ Notifications (`/api/notifications`, JWT required, rate-limited 100 req/15min):
 - `collaborator-review.md` — Collaborator code review notes
 - `slop-cleanup-report.md` — AI slop cleanup scan results
 - `session-report-2026-02-23.md` — Session work log (docs sync, perf analysis, cross-verification)
-
-## Key Patterns
-
-- **DB connection singleton**: `getDatabase()` lazily creates the connection. WHY: lazy init allows tests to monkey-patch `connection.js` before the module loads — eager init would prevent injection.
-- **Module cache clearing in tests**: `teardownTestDatabase()` deletes `require.cache` entries for all server modules. WHY: ensures fresh state between test suites when DB connection is replaced.
-- **WebSocket event flow**: Controller actions emit Socket.io events after DB writes. The client `useSocket` hook subscribes for real-time UI updates.
-- **UUID primary keys**: All entities use `uuid` v4, generated server-side. WHY: avoids integer ID enumeration attacks.
-- **JWT auth flow**: `authenticate` extracts `Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`.
-- **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT. Always seed user before creating token.
-- **Auto-logout on 401**: `handleErrorResponse()` in `notificationApi.js` calls `logout()` on 401. All API functions MUST use this helper.
+- `session-report-2026-02-25.md` — Session work log (deslop apply, cross-verification, docs update)

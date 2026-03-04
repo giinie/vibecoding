@@ -1,5 +1,7 @@
 # AI-* Skills Review Report
 
+> **상태**: 리뷰 완료. Action Items 미해결 — 다음 세션에서 처리 예정.
+
 **Date**: 2026-03-04
 **Scope**: `ai-delegate`, `ai-research`, `ai-parallel`, `ai-review`, `ai-deep`
 **Context**: `amp-*` → `ai-*` renaming — provider-agnostic AI CLI delegation skills

@@ -13,13 +13,12 @@ function migrate() {
   } catch (err) {
     console.error('Migration failed:', err.message);
     process.exit(1);
-  } finally {
-    closeDatabase();
   }
 }
 
 if (require.main === module) {
   migrate();
+  closeDatabase();
   console.log('Migration completed successfully.');
 }
 

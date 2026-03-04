@@ -45,6 +45,8 @@ JWT 도입 시 `algorithm` 옵션이 빠졌고, 이메일 정규화가 누락되
 - URL param의 UUID는 `validateUuid` 미들웨어로 검증하지만, POST body의 `user_id`는 검증이 없었다.
 - `title`/`message` 길이는 검증하지만 타입(typeof)은 검증하지 않았다.
 
+> **해결 (2026-03-04)**: POST body `user_id` UUID 검증이 `notificationController.js`에 추가되었으며, `UUID_REGEX`는 `validateUuid.js`에서 import하여 단일 소스를 유지합니다. `title`/`message`에 typeof 검증이 추가되었습니다 (2026-02-16 보안 후속 조치에서 해결).
+
 ### 권장
 
 입력 검증은 "전부 하거나 안 하거나"가 아니라 **경로별로 빠지기 쉽다**. 검증을 추가할 때 아래 질문을 던진다:
@@ -53,7 +55,7 @@ JWT 도입 시 `algorithm` 옵션이 빠졌고, 이메일 정규화가 누락되
 
 실용적인 방법:
 - **미들웨어 레벨**: URL param → `validateUuid` (이미 잘 되어 있음)
-- **컨트롤러 진입부**: body 필드 → 타입 + 형식 + 길이를 한 곳에서 일괄 검증
+- **컨트롤러 진입부**: body 필드 → 타입 + 형식 + 길이를 한 곳에서 일괄 검증. `UUID_REGEX`는 `validateUuid.js`에서 import하여 중복을 방지할 것.
 - 향후 규모가 커지면 `joi`나 `zod` 같은 스키마 검증 라이브러리 도입도 고려할 만하다
 
 ---
@@ -102,7 +104,7 @@ JWT 도입 시 `algorithm` 옵션이 빠졌고, 이메일 정규화가 누락되
 
 ### 관찰
 
-- `TRUST_PROXY`, `NODE_ENV`, `CORS_ORIGIN` 등 환경변수가 코드 여러 곳에 분산되어 있다.
+- `TRUST_PROXY`, `NODE_ENV`, `CORS_ORIGIN` 등 환경변수가 코드 여러 곳에 분산되어 있다. *(참고: 2026-03-04에 `CORS_ORIGIN`이 `index.js`에서 한 번 정의 후 `initializeSocket`에 전달하는 방식으로 통합됨)*
 - `.env.example` 파일이 없어 새 팀원이 필요한 환경변수를 파악하기 어렵다.
 
 ### 권장

@@ -26,6 +26,8 @@
 | 26-28 | `socket.on('disconnect', (reason) => { console.log('Socket disconnected:', reason) })` | 핸들러 블록 전체 삭제 |
 | 31 | `console.error('Socket connection error:', err.message)` (connect_error 내부) | console.error 라인만 삭제, disconnect 로직은 유지 |
 
+> **실제 적용 (2026-02-25)**: 핸들러 삭제 대신 NODE_ENV 개발 환경 가드를 추가하는 방식으로 수정됨 (교차 검증 후 결정).
+
 ### 2. `client/src/components/ErrorBoundary.js` — 불필요한 console.error (1건)
 
 **문제**: `componentDidCatch`에서 `console.error('ErrorBoundary caught an error:', error, errorInfo)`가 프로덕션에서 내부 에러 정보를 노출합니다.
@@ -61,21 +63,9 @@
 
 > **참고**: 라우트 파일의 주석은 팀 컨벤션에 따라 유지할 수도 있습니다. 코드 리뷰 시 팀 합의 후 결정하세요.
 
-### 5. `server/controllers/notificationController.js` — UUID_REGEX 중복 정의 (1건)
+### ~~5. `server/controllers/notificationController.js` — UUID_REGEX 중복 정의 (1건)~~ ✅ 해결 (2026-03-04)
 
-**문제**: `create()` 메서드 내부(라인 19)에 UUID v4 정규식이 로컬로 정의되어 있으나, 동일한 정규식이 `server/middleware/validateUuid.js`에 이미 존재합니다.
-
-```javascript
-// notificationController.js (모듈 레벨 상수로 호이스팅됨, 2026-02-25)
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// validateUuid.js — 동일한 범용 UUID 정규식
-```
-
-| 선택지 | 설명 |
-|--------|------|
-| A. 공유 상수로 추출 | `validateUuid.js`에서 정규식을 export하고 controller에서 import |
-| B. 현상 유지 | 두 파일의 용도가 다르므로(미들웨어 vs 컨트롤러 내부 검증) 각자 유지 |
+**해결**: `validateUuid.js`에서 `UUID_REGEX`를 export하고, `notificationController.js`에서 import하도록 수정 완료. 선택지 A(공유 상수) 적용.
 
 ### 6. `tests/integration/notification.api.test.js` — 자명한 테스트 주석 (4건)
 
@@ -118,10 +108,13 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 ## 정리 체크리스트
 
-작업 시 아래 순서로 진행하세요:
-
-- [ ] `/deslop apply` 실행하여 HIGH 5건 자동 수정
+- [x] AI slop HIGH 정리 적용 (2026-02-25 `/deslop apply`)
+  - [x] `socketService.js`: console.log에 NODE_ENV 가드 추가
+  - [x] `notificationController.js`: 상수 모듈 레벨 호이스팅
+  - [x] `migrate.js`: console.log를 require.main 가드 이동
+  - [ ] `ErrorBoundary.js`: console.error 제거 (미적용)
+  - [ ] `notification.websocket.test.js`: expect(true).toBe(true) 제거 (미적용)
 - [ ] `npm test` 실행하여 테스트 통과 확인
 - [ ] MEDIUM 항목 중 라우트 주석(#4) 팀 합의 후 결정
-- [ ] MEDIUM 항목 중 UUID_REGEX 중복(#5) 리팩토링 여부 결정
+- [x] MEDIUM 항목 중 UUID_REGEX 중복(#5) 리팩토링 — `validateUuid.js`에서 export, controller에서 import (2026-03-04)
 - [ ] LOW 항목은 선택적 정리 (유지 권장)

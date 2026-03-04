@@ -34,15 +34,16 @@ const notificationModel = {
       LIMIT ? OFFSET ?
     `).all(...params, limit, offset);
 
-    const total = db.prepare(`
-      SELECT COUNT(*) as count FROM notifications
-      ${whereClause}
-    `).get(...params).count;
+    const counts = db.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread_count
+      FROM notifications
+      WHERE user_id = ?
+    `).get(userId);
 
-    const unreadCount = db.prepare(`
-      SELECT COUNT(*) as count FROM notifications
-      WHERE user_id = ? AND is_read = 0
-    `).get(userId).count;
+    const total = unreadOnly ? counts.unread_count : counts.total;
+    const unreadCount = counts.unread_count;
 
     return {
       notifications: notifications.map(this._parseMetadata),

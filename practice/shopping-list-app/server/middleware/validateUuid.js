@@ -10,4 +10,4 @@ function validateUuid(paramName) {
   };
 }
 
-module.exports = { validateUuid };
+module.exports = { validateUuid, UUID_REGEX };

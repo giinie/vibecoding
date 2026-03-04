@@ -5,7 +5,7 @@ const {
   emitAllNotificationsRead,
 } = require('../websocket/notificationEmitter');
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const { UUID_REGEX } = require('../middleware/validateUuid');
 const VALID_TYPES = ['item_added', 'item_purchased', 'list_shared', 'reminder'];
 
 const notificationController = {
@@ -57,7 +57,7 @@ const notificationController = {
     } catch (err) {
       if (err.message.includes('CHECK constraint failed')) {
         return res.status(400).json({
-          error: 'Invalid notification type. Must be one of: item_added, item_purchased, list_shared, reminder',
+          error: `Invalid notification type. Must be one of: ${VALID_TYPES.join(', ')}`,
         });
       }
       if (err.message.includes('FOREIGN KEY constraint failed')) {

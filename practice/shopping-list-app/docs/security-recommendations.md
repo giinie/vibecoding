@@ -1,9 +1,10 @@
 # 보안 강화 권장사항
 
+> **상태**: 모든 항목 구현 완료 (2026-02-16 ~ 2026-02-23 완료). 결정 기록 용도로 보존.
 > **작성일**: 2026-02-16
 > **작성 배경**: Fullstack Code Review에서 도출된 프로덕션 배포 전 필수 개선 항목
 
-## 현재 상태
+## 변경 전 상태 (v0.1 구현)
 
 현재 인증 체계는 `x-user-id` HTTP 헤더를 기반으로 하며, 클라이언트가 헤더 값을 자유롭게 설정할 수 있어 **실질적인 보안이 없는 상태**입니다. WebSocket 연결 역시 `query.userId`의 존재 여부만 확인하며, 유효성 검증이 없습니다.
 
@@ -26,6 +27,8 @@
 ---
 
 ## 권장사항 #5: REST API 인증 체계 강화 (JWT 도입)
+
+> **현재 코드**: 아래 예시가 실제 구현에 반영되어 있습니다.
 
 ### 문제점
 
@@ -88,11 +91,13 @@ router.post('/login', (req, res) => {
 #### 3단계: 클라이언트 측 토큰 관리
 
 ```javascript
-// client/src/services/notificationApi.js (변경 후 예시)
+// client/src/services/notificationApi.js (현재 구현)
+import { getToken, logout } from './authApi';
+
 function authHeaders(extra = {}) {
-  const token = localStorage.getItem('auth_token');
+  const token = getToken();  // authApi.js의 getToken()을 통해 접근
   return {
-    'Authorization': `Bearer ${token}`,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...extra,
   };
 }
@@ -108,12 +113,14 @@ npm install jsonwebtoken bcryptjs
 
 - `JWT_SECRET`은 환경 변수로 관리 (`.env` 파일, 절대 코드에 하드코딩하지 않을 것)
 - 토큰 만료 시간 설정 (예: 7일) 및 리프레시 토큰 전략 검토
-- `users` 테이블에 `password_hash` 컬럼 추가 필요
+- ~~`users` 테이블에 `password_hash` 컬럼 추가 필요~~ (완료)
 - 기존 `x-user-id` 기반 테스트 코드 전면 수정 필요
 
 ---
 
 ## 권장사항 #6: WebSocket 인증 추가
+
+> **현재 코드**: 아래 예시가 실제 구현에 반영되어 있습니다.
 
 ### 문제점
 

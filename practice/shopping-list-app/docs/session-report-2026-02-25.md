@@ -1,4 +1,4 @@
-# 작업 세션 보고서
+# 작업 세션 보고서 — 2026-02-25
 
 > **날짜**: 2026-02-25
 > **프로젝트**: Shopping List App (Express.js + React + SQLite)
@@ -193,9 +193,9 @@ Tests:       69 passed, 69 total
 
 | 우선순위 | 항목 | 비고 |
 |----------|------|------|
-| 1 | `.env.example`에 `REACT_APP_API_URL`, `REACT_APP_SOCKET_URL` 추가 | 환경변수 전파 누락 |
-| 2 | `docs/slop-cleanup-report.md` 체크리스트 업데이트 | 부분 적용 상태 미반영 |
-| 3 | `docs/security-recommendations.md` 아카이브 상태 배너 추가 | 완전 해결 문서에 상태 표시 |
+| 1 | `.env.example`에 `REACT_APP_API_URL`, `REACT_APP_SOCKET_URL` 추가 | 환경변수 전파 누락 (서버측 .env.example만 존재, client/.env.example은 미생성) |
+| ~~2~~ | ~~`docs/slop-cleanup-report.md` 체크리스트 업데이트~~ | ✅ 해결 (2026-03-04) — UUID_REGEX 항목 체크 완료 |
+| ~~3~~ | ~~`docs/security-recommendations.md` 아카이브 상태 배너 추가~~ | ✅ 해결 (2026-03-04) — 상태 배너 추가 |
 | 4 | ErrorBoundary.js console.error (slop HIGH 미적용 1건) | 교차 검증에서 다루지 않음 |
 | 5 | expect(true).toBe(true) (slop HIGH 미적용 1건) | 교차 검증에서 다루지 않음 |
 

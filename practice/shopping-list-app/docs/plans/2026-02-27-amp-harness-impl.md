@@ -1,6 +1,9 @@
+> **[ARCHIVED]** 이 문서는 v1 구현 계획(amp-* 스킬)을 기록합니다. amp-* 스킬은 ai-* 스킬로 대체되었습니다 (2026-03-04).
+> 현행 설계: `docs/plans/2026-02-27-amp-harness-design.md` (v2). 보존 이유: 의사결정 기록.
+
 # AmpCode Harness Skill Family Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **완료됨**: 아래 지시는 이미 실행됨 (2026-02-27). ~~**For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.~~
 
 **Goal:** Create 5 Claude Code Skills (`amp-delegate`, `amp-review`, `amp-deep`, `amp-research`, `amp-parallel`) that enable Claude Code to delegate tasks to AmpCode CLI.
 
