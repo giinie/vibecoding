@@ -4,9 +4,13 @@ const { createSocketAuthMiddleware } = require('./socketAuthMiddleware');
 let io = null;
 
 function initializeSocket(httpServer, corsOrigin) {
+  const resolvedOrigin = corsOrigin || process.env.CORS_ORIGIN;
+  if (!resolvedOrigin) {
+    console.warn('[SECURITY] CORS_ORIGIN is not set. Falling back to http://localhost:3000. Set CORS_ORIGIN in production.');
+  }
   io = new Server(httpServer, {
     cors: {
-      origin: corsOrigin || process.env.CORS_ORIGIN || 'http://localhost:3000',
+      origin: resolvedOrigin || 'http://localhost:3000',
       methods: ['GET', 'POST'],
     },
   });

@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **MUST** transform `is_read` at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`).
 - **MUST** use `handleErrorResponse()` in `notificationApi.js` for all new API functions — it calls `logout()` on 401 to preserve the auto-logout contract.
 - **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+- **MUST NOT** log secrets or passwords outside `NODE_ENV === 'development'`. `seed.js` guards password output with this check. Any new seed/debug scripts must follow the same pattern.
+- **MUST** pass `corsOrigin` explicitly to `initializeSocket()`. The function warns if no origin is provided, but falls back to `localhost:3000` for development convenience. Always set `CORS_ORIGIN` in production.
 
 ## Project Overview
 
@@ -166,3 +168,4 @@ Notifications (`/api/notifications`, JWT required, rate-limited 100 req/15min):
 - `slop-cleanup-report.md` — AI slop cleanup scan results
 - `session-report-2026-02-23.md` — Session work log (docs sync, perf analysis, cross-verification)
 - `session-report-2026-02-25.md` — Session work log (deslop apply, cross-verification, docs update)
+- `security-cross-verification-2026-03-07.md` — Cross-verification of security audit (9 existing items re-confirmed, 6 new findings, 2 HIGH fixed)

@@ -81,7 +81,9 @@ function seed() {
 
     seedTransaction();
     console.log(`Seeded ${SAMPLE_USERS.length} users and 4 notifications.`);
-    console.log(`Default password for all users: ${DEFAULT_PASSWORD}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Default password for all users: ${DEFAULT_PASSWORD}`);
+    }
   } catch (err) {
     console.error('Seeding failed:', err.message);
     process.exit(1);
