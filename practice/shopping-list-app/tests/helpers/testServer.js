@@ -31,8 +31,10 @@ function createTestServer() {
   // Routes - require fresh after DB mock is in place
   const authRoutes = require('../../server/routes/auth');
   const notificationRoutes = require('../../server/routes/notifications');
+  const shoppingItemRoutes = require('../../server/routes/shoppingItems');
   app.use('/api/auth', authRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/shopping-items', shoppingItemRoutes);
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

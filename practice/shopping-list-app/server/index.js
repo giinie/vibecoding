@@ -15,6 +15,7 @@ const { initializeSocket } = require('./websocket/socketManager');
 const { closeDatabase } = require('./db/connection');
 const authRoutes = require('./routes/auth');
 const notificationRoutes = require('./routes/notifications');
+const shoppingItemRoutes = require('./routes/shoppingItems');
 
 const app = express();
 const server = http.createServer(app);
@@ -49,6 +50,7 @@ const apiLimiter = rateLimit({ ...rateLimitDefaults, max: 100 });
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/notifications', apiLimiter, notificationRoutes);
+app.use('/api/shopping-items', apiLimiter, shoppingItemRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

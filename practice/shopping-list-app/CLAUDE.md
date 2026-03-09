@@ -10,9 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **MUST** set `JWT_SECRET` in `.env` before starting the server — it exits immediately without it. Tests set `process.env.JWT_SECRET = 'test-jwt-secret-key'` in `setupTestDatabase()`.
 - **MUST** call `setupTestDatabase()` before `createTestServer()` in tests — order matters because tests monkey-patch `server/db/connection.js` via module cache. Reversing the order breaks test isolation.
 - **MUST** use UUID v4 format for any `userId` route parameter in tests. The default `test-user-1` string will be rejected by `validateUuid` middleware. Use `crypto.randomUUID()` or a fixed UUID like `'550e8400-e29b-41d4-a716-446655440000'`. **Note**: `seedTestUser()` defaults to `'test-user-1'` — always pass an explicit UUID: `seedTestUser('550e8400-e29b-41d4-a716-446655440000')`.
-- **MUST** transform `is_read` at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`).
-- **MUST** use `handleErrorResponse()` in `notificationApi.js` for all new API functions — it calls `logout()` on 401 to preserve the auto-logout contract.
+- **MUST** transform boolean columns at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`) and `Boolean(item.is_purchased)` (see `transformItem` in `shoppingItemApi.js`).
+- **MUST** use `handleErrorResponse()` from `apiUtils.js` for all new API functions — it calls `logout()` on 401 to preserve the auto-logout contract. Both `notificationApi.js` and `shoppingItemApi.js` import it from `apiUtils.js`.
 - **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+- **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, default 1), `unit` (optional string, max 20 chars).
 - **MUST NOT** log secrets or passwords outside `NODE_ENV === 'development'`. `seed.js` guards password output with this check. Any new seed/debug scripts must follow the same pattern.
 - **MUST** pass `corsOrigin` explicitly to `initializeSocket()`. The function warns if no origin is provided, but falls back to `localhost:3000` for development convenience. Always set `CORS_ORIGIN` in production.
 
@@ -54,8 +55,9 @@ npm run seed                   # Seed sample data
 - **JWT auth flow**: `authenticate` extracts `Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`. Token signing uses `signToken()` helper in `auth.js`.
 - **CORS_ORIGIN**: Defined once in `index.js` and passed to both Express CORS middleware and `initializeSocket()`. WHY: single config point prevents HTTP/WebSocket CORS drift.
 - **Token access**: All client modules MUST use `getToken()` from `authApi.js` to read the JWT token. Never access `localStorage` directly for the token.
+- **Shared API utilities**: `BASE_URL`, `authHeaders()`, and `handleErrorResponse()` live in `apiUtils.js`. All API service modules (`notificationApi.js`, `shoppingItemApi.js`) import from here. Never duplicate these across service files.
 - **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT. Always seed user before creating token. **Caution**: `seedTestUser()` defaults to non-UUID `'test-user-1'` — always pass an explicit UUID.
-- **Auto-logout on 401**: `handleErrorResponse()` in `notificationApi.js` calls `logout()` on 401. All API functions MUST use this helper.
+- **Auto-logout on 401**: `handleErrorResponse()` in `apiUtils.js` calls `logout()` on 401. All API service modules (`notificationApi.js`, `shoppingItemApi.js`) import and use this helper.
 - **useNotifications return values**: Returns `hasUnread` (boolean) derived from `unreadCount`. `NotificationDropdown` and `NotificationList` currently compute `hasUnread` locally via `notifications.some(n => !n.isRead)` — prefer using `hasUnread` from `useNotifications()` when refactoring.
 - **Pagination constant**: `ITEMS_PER_PAGE = 5` in `useNotifications.js`. Hardcoded — do not add a separate constant elsewhere.
 
@@ -93,15 +95,19 @@ server/middleware/validateUuid.js         → UUID format validation middleware 
 server/models/notificationModel.js       → Notification data access (better-sqlite3)
 server/models/userModel.js               → User CRUD with bcrypt password hashing
 server/db/connection.js                  → Singleton DB connection (lazy-initialized)
-server/db/schema.sql                     → Table definitions (users, notifications)
+server/db/schema.sql                     → Table definitions (users, notifications, shopping_items)
 server/db/migrate.js                     → Runs schema.sql against the DB
 server/websocket/socketManager.js        → Socket.io init, room management
 server/websocket/socketAuthMiddleware.js → JWT auth for WebSocket connections
 server/websocket/notificationEmitter.js  → Event emitters (new, read, read-all)
+server/routes/shoppingItems.js           → Shopping item CRUD routes (JWT required)
+server/controllers/shoppingItemController.js → Request handling, delegates to shoppingItemModel
+server/models/shoppingItemModel.js       → Shopping item data access (better-sqlite3)
+server/websocket/shoppingItemEmitter.js  → Event emitters (new, toggled, deleted)
 ```
 
-- **Database**: SQLite via `better-sqlite3` (synchronous API). WAL mode + foreign keys enabled. Composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`.
-- **WebSocket**: JWT auth via `socket.handshake.auth.token`. Users join room `user:{userId}`. Events: `notification:new`, `notification:read`, `notification:read-all`.
+- **Database**: SQLite via `better-sqlite3` (synchronous API). WAL mode + foreign keys enabled. `notifications` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`. `shopping_items` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_purchased)`.
+- **WebSocket**: JWT auth via `socket.handshake.auth.token`. Users join room `user:{userId}`. Notification events: `notification:new`, `notification:read`, `notification:read-all`. Shopping item events: `shoppingItem:new`, `shoppingItem:toggled`, `shoppingItem:deleted`.
 - **Notification types** (CHECK constraint): `item_added`, `item_purchased`, `list_shared`, `reminder`.
 
 ### Security
@@ -130,6 +136,11 @@ client/src/components/NotificationDropdown.js → Notification dropdown panel
 client/src/components/NotificationList.js     → Notification list view
 client/src/components/NotificationItem.js     → Single notification item
 client/src/components/ErrorBoundary.js        → React error boundary wrapper
+client/src/services/apiUtils.js              → Shared API utilities (BASE_URL, authHeaders, handleErrorResponse)
+client/src/services/shoppingItemApi.js       → Shopping item API client + transformItem()
+client/src/hooks/useShoppingItems.js         → Shopping item state management (CRUD + real-time, pagination)
+client/src/components/ShoppingItemInput.js   → Add item form (name, quantity, unit)
+client/src/components/ShoppingItemList.js    → Shopping item list with toggle/delete/load-more
 ```
 
 - JWT token stored in `localStorage` under `TOKEN_KEY` constant (defined in `authApi.js`). All modules access the token via `getToken()` from `authApi.js` — never read `localStorage` directly.
@@ -141,7 +152,7 @@ Integration and unit tests using Jest + Supertest with in-memory SQLite:
 
 - `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()`.
 - `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port.
-- `tests/integration/` — 5 suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`.
+- `tests/integration/` — 6 suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `shoppingItem.api.test.js`.
 - `tests/unit/` — 2 suites: `notificationApi.test.js`, `notificationTransform.test.js`.
 
 ### API Endpoints
@@ -163,8 +174,18 @@ Notifications (`/api/notifications`, JWT required, rate-limited 100 req/15min):
 | PATCH | `/read-all/:userId` | Mark all as read |
 | DELETE | `/:id` | Delete notification |
 
+Shopping Items (`/api/shopping-items`, JWT required, rate-limited 100 req/15min):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/` | Create shopping item (name, quantity?, unit?) |
+| GET | `/:userId` | List items (query: `limit`, `offset`); ordered unpurchased-first |
+| PATCH | `/:id/toggle` | Toggle purchased status |
+| DELETE | `/:id` | Delete shopping item |
+
 ### Documentation (`docs/`)
 
+- `ai-skills-usage-guide.md` — AI skills (ai-delegate, ai-review 등) 사용 가이드
 - `security-recommendations.md` — Security audit findings and remediation plan (all items resolved)
 - `security-audit-followup-report.md` — Post-audit verification results
 - `collaborator-review.md` — Collaborator code review notes
@@ -172,3 +193,4 @@ Notifications (`/api/notifications`, JWT required, rate-limited 100 req/15min):
 - `session-report-2026-02-23.md` — Session work log (docs sync, perf analysis, cross-verification)
 - `session-report-2026-02-25.md` — Session work log (deslop apply, cross-verification, docs update)
 - `security-cross-verification-2026-03-07.md` — Cross-verification of security audit (9 existing items re-confirmed, 6 new findings, 2 HIGH fixed)
+- `plans/` — Architecture design docs and improvement roadmaps

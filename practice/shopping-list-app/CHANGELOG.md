@@ -5,6 +5,26 @@
 
 ## [Unreleased]
 
+### 2026-03-09
+
+#### Added
+- Shopping Item CRUD 기능
+  - `server/models/shoppingItemModel.js`: create, findByUserId, findById, togglePurchased, delete
+  - `server/controllers/shoppingItemController.js`: 요청 처리 및 유효성 검사
+  - `server/routes/shoppingItems.js`: POST /, GET /:userId, PATCH /:id/toggle, DELETE /:id (JWT 필수)
+  - `server/websocket/shoppingItemEmitter.js`: shoppingItem:new, shoppingItem:toggled, shoppingItem:deleted 이벤트
+  - `client/src/services/shoppingItemApi.js`: API 클라이언트 + transformItem()
+  - `client/src/hooks/useShoppingItems.js`: CRUD 상태 관리 + WebSocket 실시간 동기화
+  - `client/src/components/ShoppingItemInput.js`: 아이템 추가 폼 (이름, 수량, 단위)
+  - `client/src/components/ShoppingItemList.js`: 목록 뷰 (토글/삭제/더보기)
+  - `client/src/styles/shopping.css`: BEM 기반 스타일
+  - `server/db/schema.sql`: shopping_items 테이블 추가 (복합 인덱스 2개)
+  - `tests/integration/shoppingItem.api.test.js`: 통합 테스트 23개 케이스
+
+#### Refactored
+- `client/src/services/apiUtils.js` 신규 추출: notificationApi.js에서 중복 코드(BASE_URL, authHeaders, handleErrorResponse) 분리
+- `notificationApi.js`, `shoppingItemApi.js` 모두 apiUtils.js에서 import
+
 ### 2026-03-04
 
 #### Changed

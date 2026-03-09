@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { SocketProvider } from './context/SocketContext';
 import NotificationBell from './components/NotificationBell';
 import NotificationList from './components/NotificationList';
+import ShoppingItemInput from './components/ShoppingItemInput';
+import ShoppingItemList from './components/ShoppingItemList';
 import useNotifications from './hooks/useNotifications';
+import useShoppingItems from './hooks/useShoppingItems';
 import { login, logout } from './services/authApi';
 import { disconnect } from './services/socketService';
 import './App.css';
 import './styles/notifications.css';
+import './styles/shopping.css';
 
 function AppContent({ userId, onLogout }) {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
@@ -21,6 +25,16 @@ function AppContent({ userId, onLogout }) {
     markAllAsRead,
     removeNotification,
   } = useNotifications(userId);
+  const {
+    items,
+    loading: itemsLoading,
+    error: itemsError,
+    hasMore: itemsHasMore,
+    loadMore: itemsLoadMore,
+    addItem,
+    toggleItem,
+    removeItem,
+  } = useShoppingItems(userId);
 
   if (showAllNotifications) {
     return (
@@ -63,9 +77,16 @@ function AppContent({ userId, onLogout }) {
       </header>
       <main className="app-main">
         {error && <div className="app-error">{error}</div>}
-        <div className="app-placeholder">
-          <p>장바구니 목록이 여기에 표시됩니다.</p>
-        </div>
+        {itemsError && <div className="app-error">{itemsError}</div>}
+        <ShoppingItemInput onAdd={addItem} />
+        <ShoppingItemList
+          items={items}
+          loading={itemsLoading}
+          hasMore={itemsHasMore}
+          onLoadMore={itemsLoadMore}
+          onToggle={toggleItem}
+          onDelete={removeItem}
+        />
       </main>
     </div>
   );
