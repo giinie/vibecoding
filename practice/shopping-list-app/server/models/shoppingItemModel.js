@@ -36,19 +36,19 @@ const shoppingItemModel = {
     return db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(id) || null;
   },
 
-  togglePurchased(id) {
+  togglePurchased(id, userId) {
     const db = getDatabase();
     const result = db.prepare(
-      'UPDATE shopping_items SET is_purchased = CASE WHEN is_purchased = 0 THEN 1 ELSE 0 END WHERE id = ?'
-    ).run(id);
+      'UPDATE shopping_items SET is_purchased = CASE WHEN is_purchased = 0 THEN 1 ELSE 0 END WHERE id = ? AND user_id = ?'
+    ).run(id, userId);
 
     if (result.changes === 0) return null;
     return this.findById(id);
   },
 
-  delete(id) {
+  delete(id, userId) {
     const db = getDatabase();
-    const result = db.prepare('DELETE FROM shopping_items WHERE id = ?').run(id);
+    const result = db.prepare('DELETE FROM shopping_items WHERE id = ? AND user_id = ?').run(id, userId);
     return result.changes > 0;
   },
 };

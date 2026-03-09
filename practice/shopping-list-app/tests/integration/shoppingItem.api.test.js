@@ -104,6 +104,16 @@ describe('POST /api/shopping-items', () => {
     expect(res.body.error).toMatch(/quantity/i);
   });
 
+  it('returns 400 for quantity exceeding 10000', async () => {
+    const res = await agent
+      .post('/api/shopping-items')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: '빵', quantity: 10001 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/quantity/i);
+  });
+
   it('returns 400 for unit exceeding 20 chars', async () => {
     const res = await agent
       .post('/api/shopping-items')

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSocketContext } from '../context/SocketContext';
 import * as api from '../services/shoppingItemApi';
 
@@ -12,6 +12,7 @@ export default function useShoppingItems(userId) {
   const [hasMore, setHasMore] = useState(true);
 
   const socket = useSocketContext();
+  const inflightRef = useRef(new Set());
 
   const loadItems = useCallback(async (pageNum = 1, append = false) => {
     if (!userId) return;
@@ -24,7 +25,12 @@ export default function useShoppingItems(userId) {
         limit: ITEMS_PER_PAGE,
       });
 
-      setItems(prev => append ? [...prev, ...data.items] : data.items);
+      setItems(prev => {
+        if (!append) return data.items;
+        const existingIds = new Set(prev.map(i => i.id));
+        const newItems = data.items.filter(i => !existingIds.has(i.id));
+        return [...prev, ...newItems];
+      });
       setHasMore(pageNum * ITEMS_PER_PAGE < data.total);
     } catch (err) {
       setError(err.message);
@@ -58,21 +64,27 @@ export default function useShoppingItems(userId) {
   const toggleItem = useCallback(async (id) => {
     try {
       setError(null);
+      inflightRef.current.add(`toggle:${id}`);
       const raw = await api.toggleShoppingItem(id);
       const updated = api.transformItem(raw);
       setItems(prev => prev.map(item => item.id === id ? updated : item));
     } catch (err) {
       setError(err.message);
+    } finally {
+      inflightRef.current.delete(`toggle:${id}`);
     }
   }, []);
 
   const removeItem = useCallback(async (id) => {
     try {
       setError(null);
+      inflightRef.current.add(`delete:${id}`);
       await api.deleteShoppingItem(id);
       setItems(prev => prev.filter(item => item.id !== id));
     } catch (err) {
       setError(err.message);
+    } finally {
+      inflightRef.current.delete(`delete:${id}`);
     }
   }, []);
 
@@ -95,10 +107,12 @@ export default function useShoppingItems(userId) {
 
     const handleToggled = (rawItem) => {
       const updated = api.transformItem(rawItem);
+      if (inflightRef.current.has(`toggle:${updated.id}`)) return;
       setItems(prev => prev.map(item => item.id === updated.id ? updated : item));
     };
 
     const handleDeleted = ({ id }) => {
+      if (inflightRef.current.has(`delete:${id}`)) return;
       setItems(prev => prev.filter(item => item.id !== id));
     };
 

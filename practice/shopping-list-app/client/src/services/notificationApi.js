@@ -18,7 +18,7 @@ export async function fetchNotifications(userId, params = {}) {
   const response = await fetch(`${BASE_URL}/notifications/${userId}?${query}`, {
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '알림을 불러오는데 실패했습니다.');
+  await handleErrorResponse(response, '알림을 불러오는데 실패했습니다.');
   const data = await response.json();
   return {
     ...data,
@@ -31,7 +31,7 @@ export async function markAsRead(id) {
     method: 'PATCH',
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '알림 읽음 처리에 실패했습니다.');
+  await handleErrorResponse(response, '알림 읽음 처리에 실패했습니다.');
   return response.json();
 }
 
@@ -40,7 +40,7 @@ export async function markAllAsRead(userId) {
     method: 'PATCH',
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '전체 읽음 처리에 실패했습니다.');
+  await handleErrorResponse(response, '전체 읽음 처리에 실패했습니다.');
   return response.json();
 }
 
@@ -49,7 +49,7 @@ export async function deleteNotification(id) {
     method: 'DELETE',
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '알림 삭제에 실패했습니다.');
+  await handleErrorResponse(response, '알림 삭제에 실패했습니다.');
   return response.status === 204 ? null : response.json();
 }
 
@@ -59,6 +59,6 @@ export async function createNotification(data) {
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(data),
   });
-  handleErrorResponse(response, '알림 생성에 실패했습니다.');
+  await handleErrorResponse(response, '알림 생성에 실패했습니다.');
   return response.json();
 }

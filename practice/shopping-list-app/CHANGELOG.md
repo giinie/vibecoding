@@ -5,7 +5,7 @@
 
 ## [Unreleased]
 
-### 2026-03-09
+### 2026-03-09 (보안 강화 및 버그 수정)
 
 #### Added
 - Shopping Item CRUD 기능
@@ -19,11 +19,19 @@
   - `client/src/components/ShoppingItemList.js`: 목록 뷰 (토글/삭제/더보기)
   - `client/src/styles/shopping.css`: BEM 기반 스타일
   - `server/db/schema.sql`: shopping_items 테이블 추가 (복합 인덱스 2개)
-  - `tests/integration/shoppingItem.api.test.js`: 통합 테스트 23개 케이스
+  - `tests/integration/shoppingItem.api.test.js`: 통합 테스트 (quantity max 케이스 포함)
+  - `tests/integration/shoppingItem.websocket.test.js`: WebSocket 통합 테스트 5개 케이스 신규 추가
+
+#### Fixed
+- `server/models/shoppingItemModel.js`: `togglePurchased`, `delete` 메서드에 `userId` 파라미터 추가 — 단일 SQL로 소유권 검증 + 변경을 원자적으로 처리 (TOCTOU 취약점 해소)
+- `server/controllers/shoppingItemController.js`: `quantity` 최대값 10000 제한 추가
+- `client/src/hooks/useShoppingItems.js`: `loadMore` 중복 아이템 방지(dedup) 및 `inflightRef`로 WebSocket self-event 필터링
+- `client/src/components/ShoppingItemList.js`: 하드코딩된 `'개'` 기본 단위 제거 — 단위가 없으면 수량만 표시
 
 #### Refactored
 - `client/src/services/apiUtils.js` 신규 추출: notificationApi.js에서 중복 코드(BASE_URL, authHeaders, handleErrorResponse) 분리
-- `notificationApi.js`, `shoppingItemApi.js` 모두 apiUtils.js에서 import
+- `client/src/services/apiUtils.js`: `handleErrorResponse()`를 async 함수로 변경 — 서버 오류 응답 본문(JSON)을 파싱해 상세 메시지 노출
+- `notificationApi.js`, `shoppingItemApi.js`: 모든 `handleErrorResponse()` 호출을 `await`로 변경
 
 ### 2026-03-04
 

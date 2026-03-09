@@ -55,13 +55,13 @@ which amp && echo "OK" || echo "NOT FOUND"
 
 Claude Code에서 슬래시 명령으로 호출합니다:
 
-```
+```text
 /ai-delegate codex "이 함수의 성능을 분석해줘"
 ```
 
 또는 자연어로 트리거할 수 있습니다:
 
-```
+```text
 "이 코드를 다른 AI로 리뷰해줘"     -> ai-review 트리거
 "React 훅 패턴 참조 구현 찾아줘"    -> ai-research 트리거
 "src/ 아래 모든 JS 파일 변환해줘"   -> ai-parallel 트리거
@@ -72,7 +72,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 모든 ai-* 스킬은 실행 전 확인을 요청합니다:
 
-```
+```text
 이 작업을 외부 AI CLI에 위임합니다.
 
   프로바이더: codex
@@ -87,7 +87,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 ### 의사결정 흐름도
 
-```
+```text
 질문: "다른 AI의 관점이 필요한가?"
   -> Yes: /ai-review (codex + gemini 병렬 리뷰)
 
@@ -149,7 +149,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 모든 ai-* 스킬의 허브 역할. 직접 호출하거나 다른 스킬이 내부적으로 참조합니다.
 
-```
+```bash
 /ai-delegate codex "이 함수의 시간 복잡도를 계산해줘"
 /ai-delegate gemini "API 응답 구조를 설계해줘"
 /ai-delegate amp "인증 모듈의 보안 취약점을 분석해줘"
@@ -173,7 +173,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 **트리거 키워드**: "참조 구현", "다른 프로젝트 참고", "오픈소스 예시", "best practices"
 
-```
+```bash
 /ai-research "Socket.io 인증 미들웨어 구현 패턴"
 /ai-research "Express.js rate limiting 모범 사례"
 ```
@@ -194,7 +194,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 **트리거 키워드**: "모든 파일", "일괄 변환", "병렬 처리", "대량 작업"
 
-```
+```bash
 /ai-parallel "src/components/ 아래 모든 .jsx 파일을 TypeScript로 변환"
 /ai-parallel "tests/ 아래 모든 테스트 파일에 setup/teardown 추가"
 ```
@@ -214,7 +214,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 **트리거 키워드**: "세컨드 오피니언", "다른 관점", "교차 검증", "cross-check"
 
-```
+```bash
 /ai-review "server/middleware/auth.js 보안 리뷰"
 /ai-review "최근 변경사항 전체 리뷰"
 ```
@@ -223,7 +223,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 **결과 형식** -- 3자 비교 테이블:
 
-```
+```text
 | # | 항목          | Claude | Codex | Gemini | 심각도   |
 |---|--------------|--------|-------|--------|---------|
 | 1 | SQL injection | 발견   | 발견  | 미발견  | CRITICAL |
@@ -240,7 +240,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 **트리거 키워드**: "깊은 분석", "근본 원인", "복잡한 버그", "성능 병목", "대규모 리팩토링"
 
-```
+```bash
 /ai-deep "WebSocket 연결이 간헐적으로 끊기는 원인 조사"
 /ai-deep "notificationModel.js의 N+1 쿼리 성능 병목 분석"
 ```
@@ -268,7 +268,7 @@ Full autonomy 플래그는 **반드시 사용자 확인** 후 사용됩니다.
 
 ### 폴백 체인 (기본)
 
-```
+```text
 codex -> gemini -> amp -> Claude fallback
 ```
 
@@ -297,7 +297,7 @@ codex -> gemini -> amp -> Claude fallback
 
 ## 아키텍처
 
-```
+```text
 ai-delegate (허브: 역할 계층, CLI 문법, 보안 규칙, 에러 처리, 폴백 체인)
   |
   +-- ai-research  (원격 검색: gemini 기본, amp Librarian 에스컬레이션)

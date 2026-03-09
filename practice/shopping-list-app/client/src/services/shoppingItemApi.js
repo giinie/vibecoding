@@ -17,7 +17,7 @@ export async function fetchShoppingItems(userId, params = {}) {
   const response = await fetch(`${BASE_URL}/shopping-items/${userId}?${query}`, {
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '쇼핑 목록을 불러오는데 실패했습니다.');
+  await handleErrorResponse(response, '쇼핑 목록을 불러오는데 실패했습니다.');
   const data = await response.json();
   return {
     ...data,
@@ -31,7 +31,7 @@ export async function createShoppingItem({ name, quantity, unit }) {
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ name, quantity, unit }),
   });
-  handleErrorResponse(response, '아이템 추가에 실패했습니다.');
+  await handleErrorResponse(response, '아이템 추가에 실패했습니다.');
   return response.json();
 }
 
@@ -40,7 +40,7 @@ export async function toggleShoppingItem(id) {
     method: 'PATCH',
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '상태 변경에 실패했습니다.');
+  await handleErrorResponse(response, '상태 변경에 실패했습니다.');
   return response.json();
 }
 
@@ -49,6 +49,6 @@ export async function deleteShoppingItem(id) {
     method: 'DELETE',
     headers: authHeaders(),
   });
-  handleErrorResponse(response, '아이템 삭제에 실패했습니다.');
+  await handleErrorResponse(response, '아이템 삭제에 실패했습니다.');
   return response.status === 204 ? null : response.json();
 }

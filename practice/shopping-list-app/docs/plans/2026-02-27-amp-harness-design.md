@@ -21,7 +21,7 @@ A skill family (`ai-*`) that enables Claude Code to delegate tasks to external A
 
 ## Architecture
 
-```
+```text
 User
   │
   ├─[auto] "리뷰해줘" → Claude Code detects → selects ai-* skill
@@ -176,7 +176,7 @@ security guard rails, prompt delivery strategy.
 ## Common Conventions
 
 ### User Confirmation Flow
-```
+```text
 이 작업을 외부 AI CLI에 위임합니다.
 
   프로바이더: {provider}

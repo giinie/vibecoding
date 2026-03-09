@@ -19,8 +19,8 @@ const shoppingItemController = {
       }
 
       if (quantity !== undefined) {
-        if (!Number.isInteger(quantity) || quantity < 1) {
-          return res.status(400).json({ error: 'Quantity must be a positive integer' });
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) {
+          return res.status(400).json({ error: 'Quantity must be a positive integer (max 10000)' });
         }
       }
 
@@ -67,22 +67,17 @@ const shoppingItemController = {
   togglePurchased(req, res) {
     try {
       const { id } = req.params;
-      const existing = shoppingItemModel.findById(id);
+      const item = shoppingItemModel.togglePurchased(id, req.userId);
 
-      if (!existing) {
-        return res.status(404).json({ error: 'Shopping item not found' });
-      }
-
-      if (existing.user_id !== req.userId) {
+      if (!item) {
+        const exists = shoppingItemModel.findById(id);
+        if (!exists) {
+          return res.status(404).json({ error: 'Shopping item not found' });
+        }
         return res.status(403).json({ error: 'Forbidden: item does not belong to user' });
       }
 
-      const item = shoppingItemModel.togglePurchased(id);
-      if (!item) {
-        return res.status(404).json({ error: 'Shopping item not found' });
-      }
-
-      emitShoppingItemToggled(existing.user_id, item);
+      emitShoppingItemToggled(req.userId, item);
 
       return res.json(item);
     } catch (err) {
@@ -93,22 +88,17 @@ const shoppingItemController = {
   delete(req, res) {
     try {
       const { id } = req.params;
-      const existing = shoppingItemModel.findById(id);
+      const deleted = shoppingItemModel.delete(id, req.userId);
 
-      if (!existing) {
-        return res.status(404).json({ error: 'Shopping item not found' });
-      }
-
-      if (existing.user_id !== req.userId) {
+      if (!deleted) {
+        const exists = shoppingItemModel.findById(id);
+        if (!exists) {
+          return res.status(404).json({ error: 'Shopping item not found' });
+        }
         return res.status(403).json({ error: 'Forbidden: item does not belong to user' });
       }
 
-      const deleted = shoppingItemModel.delete(id);
-      if (!deleted) {
-        return res.status(404).json({ error: 'Shopping item not found' });
-      }
-
-      emitShoppingItemDeleted(existing.user_id, id);
+      emitShoppingItemDeleted(req.userId, id);
 
       return res.status(204).send();
     } catch (err) {

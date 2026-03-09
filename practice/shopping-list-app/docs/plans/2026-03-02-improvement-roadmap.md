@@ -258,7 +258,7 @@
 
 ## 의존성 그래프
 
-```
+```text
 Phase 1.3 (401 처리) ──→ Phase 3.5 (Refresh Token)
 Phase 1.4 (삭제 이벤트) ──→ Phase 4.3 (테스트 보강)
 Phase 4.1 (쇼핑 리스트) ──→ Phase 4.2 (마이그레이션 도구)

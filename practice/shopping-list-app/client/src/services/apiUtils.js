@@ -10,11 +10,18 @@ export function authHeaders(extra = {}) {
   };
 }
 
-export function handleErrorResponse(response, defaultMessage) {
+export async function handleErrorResponse(response, defaultMessage) {
+  if (response.ok) return;
   if (response.status === 401) {
     logout();
     throw new Error('인증이 필요합니다.');
   }
   if (response.status === 403) throw new Error('접근 권한이 없습니다.');
-  if (!response.ok) throw new Error(defaultMessage);
+  try {
+    const body = await response.json();
+    throw new Error(body.error || defaultMessage);
+  } catch (e) {
+    if (e instanceof SyntaxError) throw new Error(defaultMessage);
+    throw e;
+  }
 }

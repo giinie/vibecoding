@@ -26,7 +26,7 @@ export default function ShoppingItemList({ items, loading, hasMore, onLoadMore, 
             <span className="shopping-item__name">{item.name}</span>
             {(item.quantity > 1 || item.unit) && (
               <div className="shopping-item__detail">
-                {item.quantity}{item.unit ? ` ${item.unit}` : '개'}
+                {item.quantity}{item.unit ? ` ${item.unit}` : ''}
               </div>
             )}
           </div>

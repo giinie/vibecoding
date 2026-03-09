@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **MUST** transform boolean columns at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`) and `Boolean(item.is_purchased)` (see `transformItem` in `shoppingItemApi.js`).
 - **MUST** use `handleErrorResponse()` from `apiUtils.js` for all new API functions — it calls `logout()` on 401 to preserve the auto-logout contract. Both `notificationApi.js` and `shoppingItemApi.js` import it from `apiUtils.js`.
 - **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
-- **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, default 1), `unit` (optional string, max 20 chars).
+- **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
 - **MUST NOT** log secrets or passwords outside `NODE_ENV === 'development'`. `seed.js` guards password output with this check. Any new seed/debug scripts must follow the same pattern.
 - **MUST** pass `corsOrigin` explicitly to `initializeSocket()`. The function warns if no origin is provided, but falls back to `localhost:3000` for development convenience. Always set `CORS_ORIGIN` in production.
 
@@ -85,7 +85,7 @@ Optional in `client/.env` (CRA prefix required):
 
 Layered architecture with JWT auth and WebSocket side-channel:
 
-```
+```text
 server/index.js                          → Express bootstrap, security middleware, graceful shutdown
 server/routes/auth.js                    → POST /register, POST /login
 server/routes/notifications.js           → Notification CRUD routes (JWT required)
@@ -124,7 +124,7 @@ server/websocket/shoppingItemEmitter.js  → Event emitters (new, toggled, delet
 
 React 18 app (CRA) with custom hooks pattern:
 
-```
+```text
 client/src/context/SocketContext.js       → React Context providing socket instance
 client/src/hooks/useSocket.js            → Subscribe to WebSocket notification events
 client/src/hooks/useNotifications.js     → Full notification state management (CRUD + real-time)
@@ -152,7 +152,7 @@ Integration and unit tests using Jest + Supertest with in-memory SQLite:
 
 - `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()`.
 - `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port.
-- `tests/integration/` — 6 suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `shoppingItem.api.test.js`.
+- `tests/integration/` — 7 suites: `auth.test.js`, `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `shoppingItem.api.test.js`, `shoppingItem.websocket.test.js`.
 - `tests/unit/` — 2 suites: `notificationApi.test.js`, `notificationTransform.test.js`.
 
 ### API Endpoints
