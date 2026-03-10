@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Workflow orchestration guidance will be automatically imported below.
+
 <!-- Workflow Orchestration -->
 @WORKFLOW_ORCHESTRATION.md
 

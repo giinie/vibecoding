@@ -2,3 +2,5 @@ node_modules/
 .omc/
 .env
 server/db/*.db
+.claude/settings.local.json
+.mcp.json
