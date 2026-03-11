@@ -4,3 +4,4 @@ node_modules/
 server/db/*.db
 .claude/settings.local.json
 .mcp.json
+ai-delegate-workspace/
