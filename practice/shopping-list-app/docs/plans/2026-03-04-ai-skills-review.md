@@ -185,7 +185,7 @@ All other ai-* skills reference `ai-delegate` for shared conventions -- a clean 
 |-------|-----|-------|--------|---------|
 | ai-delegate | Full syntax | Full syntax | Full syntax | codex (code) / gemini (search) |
 | ai-research | Librarian search | `--search` web search | Google integration | gemini |
-| ai-parallel | Subagent parallel | Sandboxed batch | Headless + yolo | codex + gemini (parallel split) |
+| ai-parallel | 1 Team + 2 teammates | Sandboxed batch | Headless + yolo | codex + gemini (parallel split) |
 | ai-review | Deep mode (GPT) | Read-only sandbox | Pro model | codex + gemini (parallel) |
 | ai-deep | Deep + full autonomy | High reasoning effort | Pro + yolo | Escalation: Claude -> codex/gemini -> amp |
 

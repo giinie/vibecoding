@@ -5,6 +5,29 @@
 
 ## [Unreleased]
 
+### 2026-03-12 (ai-* 스킬 Team 실행 모델 + 문서 동기화)
+
+#### Changed
+- ai-delegate 스킬: Claude Code native Agent Team 기반 CLI 실행 모델로 전면 재설계 (iteration-3)
+- ai-review, ai-deep, ai-parallel, ai-research 스킬: Team 실행 모델 참조 업데이트
+- ai-review: "2 Teams 병렬" → "1 Team + 2 teammates" 병렬 패턴으로 수정
+- `docs/ai-skills-usage-guide.md`: Team 실행 모델, Minimum Output Guarantee, 검증 이력 섹션 추가
+
+#### Added
+- 모든 ai-* 스킬에 Minimum Output Guarantee 섹션 추가 (CLI 실패 시 Claude fallback)
+- ai-delegate: CLI Worker Preamble, Safe Prompt Delivery 우선순위 재정렬, Team Lifecycle Rules
+- ai-delegate: 서브에이전트 제한 사항 문서화 (Agent tool 미지원 → inline flag fallback)
+- `ai-delegate-workspace/iteration-3/`: E2E 테스트 결과 (Phase 0, Test A-D)
+
+### 2026-03-11 (프로젝트 설정 및 워크플로 가이드)
+
+#### Changed
+- `.mcp.json`을 git 추적에서 제거하고 `.mcp.json.example` 템플릿 추가
+- `CLAUDE.md`에 Workflow Orchestration 안내 추가 (`WORKFLOW_ORCHESTRATION.md` 참조)
+
+#### Fixed
+- 크로스 모델 리뷰 기반 코드 품질 개선 및 문서 동기화
+
 ### 2026-03-09 (보안 강화 및 버그 수정)
 
 #### Added

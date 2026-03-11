@@ -2,6 +2,18 @@
 
 > 외부 AI CLI 도구(Codex, Gemini, AmpCode)에 작업을 위임하는 스킬 모음입니다.
 
+### 요약 (TL;DR)
+
+| 하고 싶은 일 | 사용할 스킬 |
+|-------------|-----------|
+| 다른 AI 관점으로 코드 리뷰 | `/ai-review` |
+| 원격 코드/패턴 검색 | `/ai-research` |
+| 5개+ 파일 일괄 변환 | `/ai-parallel` |
+| 복잡한 문제 심층 분석 | `/ai-deep` |
+| 특정 프로바이더에 직접 위임 | `/ai-delegate codex\|gemini\|amp` |
+
+모든 스킬은 Claude Code Agent Team으로 실행되며, 외부 CLI 실패 시 Claude가 직접 분석합니다 (최소 출력 보장).
+
 ---
 
 ## 역할 계층 (Role Hierarchy)
@@ -36,6 +48,57 @@ ai-* 스킬은 역할 계층에 따라 프로바이더를 선택합니다:
 | `ai-parallel` | 다중 파일 병렬 처리 | codex + gemini 병렬 분담 | `/ai-parallel "모든 CSS 파일을 Tailwind로 변환"` |
 | `ai-review` | 크로스 모델 코드 리뷰 | codex + gemini 병렬 | `/ai-review "보안 취약점 검토"` |
 | `ai-deep` | 복잡한 문제 심층 분석 | 에스컬레이션 단계별 | `/ai-deep "메모리 누수 원인 조사"` |
+
+---
+
+## 실행 모델: Claude Code Agent Team
+
+Claude Code Agent Team 실행 모델은 2026-03-11 iteration-3에서 검증되었습니다.
+
+### 왜 Team인가?
+
+서브에이전트 환경에서 셸 메타문자(`<`, `>`, `|`, `$()`)가 Claude Code 권한 시스템에 의해 차단됩니다. Team teammate는 독립 Claude Code 프로세스로 실행되어 **모든 셸 명령을 제한 없이** 사용할 수 있습니다.
+
+### 실행 흐름
+
+```text
+1. TeamCreate("ai-delegate-{provider}-{timestamp}")
+2. TaskCreate("CLI 실행 작업")
+3. Agent(team_name=..., name="cli-worker") → teammate 생성
+4. Teammate가 CLI 실행 + 결과 보고
+5. TeamDelete (성공/실패 모두 반드시 cleanup)
+```
+
+### 주요 제약 사항
+
+| 제약 | 설명 |
+|------|------|
+| **리더당 1 Team** | TeamCreate는 동시에 1개 Team만 허용. 병렬 실행 시 1 Team + N teammates 사용 |
+| **서브에이전트 제한** | Agent tool은 서브에이전트에서 사용 불가 → inline flag (`-p "text"`) fallback |
+| **최소 출력 보장** | 모든 외부 CLI 실패 시 Claude가 직접 분석 수행 → 항상 결과 제공 |
+
+### 스킬별 Team 패턴
+
+| 스킬 | Team 구성 | 설명 |
+|------|----------|------|
+| ai-delegate | 1 Team + 1 teammate | 단일 프로바이더 실행 |
+| ai-review | 1 Team + 2 teammates | codex-worker + gemini-worker 병렬 |
+| ai-parallel | 1 Team + 2 teammates | codex-worker + gemini-worker 병렬 |
+| ai-deep | 1 Team + 1 teammate | 에스컬레이션 단계별 |
+| ai-research | 1 Team + 1 teammate | 단일 프로바이더 검색 |
+
+### 최소 출력 보장 (Minimum Output Guarantee)
+
+모든 ai-* 스킬은 외부 CLI가 실패하더라도 반드시 결과를 제공합니다:
+
+| 실패 상황 | 대응 |
+|----------|------|
+| CLI 미설치 | Claude 직접 분석 + 설치 안내 |
+| Team 생성 실패 | inline flag 시도 → Claude 직접 분석 |
+| 타임아웃 | Claude 직접 분석 (부분 결과 포함) |
+
+보고서에 다음이 명시됩니다:
+`[NOTE] External providers unavailable — Claude-only analysis.`
 
 ---
 
@@ -85,27 +148,18 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 ## 언제 어떤 스킬을 사용하는가?
 
-### 의사결정 흐름도
+### 의사결정 가이드
 
-```text
-질문: "다른 AI의 관점이 필요한가?"
-  -> Yes: /ai-review (codex + gemini 병렬 리뷰)
-
-질문: "원격 코드/패턴 검색이 필요한가?"
-  -> 공식 문서? -> context7 MCP 직접 사용 (위임 불필요)
-  -> 웹 검색? -> /ai-research (gemini 기본)
-  -> 깊은 코드베이스 검색? -> /ai-research amp (Librarian)
-
-질문: "5개 이상 파일에 동일 작업이 필요한가?"
-  -> Yes: /ai-parallel (codex + gemini 병렬 분담)
-  -> No (< 5개): Claude가 직접 순차 처리
-
-질문: "복잡한 문제를 깊이 분석해야 하는가?"
-  -> Claude 1차 시도 -> 미해결 시 /ai-deep (에스컬레이션)
-
-질문: "특정 프로바이더에 직접 위임하고 싶은가?"
-  -> /ai-delegate codex|gemini|amp "작업"
-```
+| 질문 | 답변 | 추천 스킬 |
+|------|------|----------|
+| 다른 AI의 관점이 필요한가? | Yes | `/ai-review` (codex + gemini 병렬 리뷰) |
+| 공식 문서를 찾는가? | Yes | context7 MCP 직접 사용 (위임 불필요) |
+| 웹 검색이 필요한가? | Yes | `/ai-research` (gemini 기본) |
+| 깊은 코드베이스 검색이 필요한가? | Yes | `/ai-research amp` (Librarian) |
+| 5개+ 파일에 동일 작업이 필요한가? | Yes | `/ai-parallel` (codex + gemini 분담) |
+| 5개 미만 파일인가? | Yes | Claude 직접 순차 처리 |
+| 복잡한 문제를 깊이 분석해야 하는가? | Yes | Claude 1차 → 미해결 시 `/ai-deep` |
+| 특정 프로바이더에 직접 위임하고 싶은가? | Yes | `/ai-delegate codex\|gemini\|amp "작업"` |
 
 ---
 
@@ -147,7 +201,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 ### ai-delegate: 범용 라우터
 
-모든 ai-* 스킬의 허브 역할. 직접 호출하거나 다른 스킬이 내부적으로 참조합니다.
+모든 ai-* 스킬의 허브 역할 (구조는 [아키텍처](#아키텍처) 참조).
 
 ```bash
 /ai-delegate codex "이 함수의 시간 복잡도를 계산해줘"
@@ -298,12 +352,28 @@ codex -> gemini -> amp -> Claude fallback
 ## 아키텍처
 
 ```text
-ai-delegate (허브: 역할 계층, CLI 문법, 보안 규칙, 에러 처리, 폴백 체인)
+ai-delegate (허브: 역할 계층, Team 실행 모델, CLI 문법, 보안 규칙, 폴백 체인)
   |
   +-- ai-research  (원격 검색: gemini 기본, amp Librarian 에스컬레이션)
-  +-- ai-parallel  (배치 처리: codex + gemini 병렬 분담)
-  +-- ai-review    (크로스 리뷰: codex + gemini 병렬, Claude 종합)
+  +-- ai-parallel  (배치 처리: 1 Team + 2 teammates 병렬 분담)
+  +-- ai-review    (크로스 리뷰: 1 Team + 2 teammates 병렬, Claude 종합)
   +-- ai-deep      (심층 분석: 에스컬레이션 단계 Level 1-3)
 ```
 
-`ai-delegate`가 역할 계층과 공통 규칙을 정의하고, 나머지 4개 스킬이 이를 참조하는 **허브-앤-스포크** 구조입니다.
+`ai-delegate`가 역할 계층과 공통 규칙을 정의하고, 나머지 4개 스킬이 이를 참조하는 **허브-앤-스포크** 구조입니다. 스킬 파일 위치: `~/.claude/skills/ai-*/SKILL.md`
+
+---
+
+## 검증 이력 (iteration-3, 2026-03-11~12)
+
+이 가이드의 실행 모델은 iteration-3 E2E 테스트에서 검증되었습니다.
+
+| 날짜 | 테스트 | 결과 | 비고 |
+|------|--------|------|------|
+| 2026-03-11 | Phase 0: teammate 권한 | PASS | `<`, `>`, `\|` 모두 허용 |
+| 2026-03-11 | Test A: 단일 codex | PASS | Team lifecycle 정상 |
+| 2026-03-11 | Test B: fallback chain | PASS | Minimum Output Guarantee 동작 |
+| 2026-03-12 | Test C: ai-review 병렬 | PASS | 1 Team + 2 teammates 병렬 성공 |
+| 2026-03-11 | Test D: 서브에이전트 | PARTIAL | Agent tool 미지원 → inline fallback |
+
+상세 결과: [`ai-delegate-workspace/iteration-3/e2e-summary.md`](../ai-delegate-workspace/iteration-3/e2e-summary.md)
