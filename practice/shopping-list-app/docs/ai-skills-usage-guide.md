@@ -2,7 +2,7 @@
 
 > 외부 AI CLI 도구(Codex, Gemini, AmpCode)에 작업을 위임하는 스킬 모음입니다.
 
-### 요약 (TL;DR)
+## 요약 (TL;DR)
 
 | 하고 싶은 일 | 사용할 스킬 |
 |-------------|-----------|
@@ -330,12 +330,14 @@ codex -> gemini -> amp -> Claude fallback
 
 ### 타임아웃
 
-| 작업 유형 | 시간 |
-|----------|------|
-| Quick/rush | 120초 |
-| 표준 (research, delegate) | 180초 |
-| 코드 리뷰 | 300초 |
-| 심층 분석, 병렬 처리 | 900초 |
+ai-delegate SKILL.md의 Effort Levels에 대응합니다:
+
+| Effort Level | 작업 유형 | 시간 |
+|-------------|----------|------|
+| low | Quick/rush | 120초 |
+| medium | 표준 (research, delegate) | 180초 |
+| high | 코드 리뷰, 아키텍처 분석 | 300~600초 |
+| max | 심층 분석, 병렬 처리 | 900초 |
 
 ### 에러 대응
 
@@ -375,5 +377,10 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, CLI 문법, 보안 규�
 | 2026-03-11 | Test B: fallback chain | PASS | Minimum Output Guarantee 동작 |
 | 2026-03-12 | Test C: ai-review 병렬 | PASS | 1 Team + 2 teammates 병렬 성공 |
 | 2026-03-11 | Test D: 서브에이전트 | PARTIAL | Agent tool 미지원 → inline fallback |
+| 2026-03-12 | SKILL.md 동기화 Test A: 단일 codex | PASS | stdin redirect `<` 정상, Team lifecycle 정상 |
+| 2026-03-12 | SKILL.md 동기화 Test B: 병렬 리뷰 | PASS | 1 Team + 2 teammates (codex + gemini) 병렬 성공 |
+| 2026-03-12 | SKILL.md 동기화 Test C: MOG fallback | PASS | CLI 미설치 시 Claude 직접 분석 + `[NOTE]` 메시지 |
 
-상세 결과: [`ai-delegate-workspace/iteration-3/e2e-summary.md`](../ai-delegate-workspace/iteration-3/e2e-summary.md)
+상세 결과:
+- iteration-3: [`ai-delegate-workspace/iteration-3/e2e-summary.md`](../ai-delegate-workspace/iteration-3/e2e-summary.md)
+- SKILL.md 동기화: [`ai-delegate-workspace/e2e-skill-sync-test/e2e-summary.md`](../ai-delegate-workspace/e2e-skill-sync-test/e2e-summary.md)
