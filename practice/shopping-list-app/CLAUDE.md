@@ -2,9 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Workflow orchestration guidance will be automatically imported below.
+## Project Overview
 
-<!-- Workflow Orchestration -->
+Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
+
+> **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `handleErrorResponse()` from `apiUtils.js` for all API functions.
+
+<!-- Workflow rules are merged from WORKFLOW_ORCHESTRATION.md at context load time -->
 @WORKFLOW_ORCHESTRATION.md
 
 ## Critical Rules
@@ -18,10 +22,6 @@ Workflow orchestration guidance will be automatically imported below.
 - **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
 - **MUST NOT** log secrets or passwords outside `NODE_ENV === 'development'`. `seed.js` guards password output with this check. Any new seed/debug scripts must follow the same pattern.
 - **MUST** pass `corsOrigin` explicitly to `initializeSocket()`. The function warns if no origin is provided, but falls back to `localhost:3000` for development convenience. Always set `CORS_ORIGIN` in production.
-
-## Project Overview
-
-Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
 
 ## First-time Setup
 

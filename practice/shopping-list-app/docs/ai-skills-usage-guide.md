@@ -381,6 +381,4 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, CLI 문법, 보안 규�
 | 2026-03-12 | SKILL.md 동기화 Test B: 병렬 리뷰 | PASS | 1 Team + 2 teammates (codex + gemini) 병렬 성공 |
 | 2026-03-12 | SKILL.md 동기화 Test C: MOG fallback | PASS | CLI 미설치 시 Claude 직접 분석 + `[NOTE]` 메시지 |
 
-상세 결과:
-- iteration-3: [`ai-delegate-workspace/iteration-3/e2e-summary.md`](../ai-delegate-workspace/iteration-3/e2e-summary.md)
-- SKILL.md 동기화: [`ai-delegate-workspace/e2e-skill-sync-test/e2e-summary.md`](../ai-delegate-workspace/e2e-skill-sync-test/e2e-summary.md)
+상세 결과: `ai-delegate-workspace/` 디렉토리 참조 (`.gitignore` 대상, 로컬에서만 확인 가능)
