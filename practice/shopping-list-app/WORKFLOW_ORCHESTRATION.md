@@ -37,10 +37,9 @@
 - After a user correction that reveals a **non-obvious or recurring pattern**, append it to `tasks/lessons.md`
 - Format: `[date] Pattern: <what went wrong> → Rule: <how to prevent it>`
 - Keep `tasks/lessons.md` concise — prune entries that no longer apply
-- Promote frequently-violated rules directly into this file (CLAUDE.md) for permanent enforcement
+- Promote frequently-violated rules directly into `CLAUDE.md` for permanent enforcement
 
-> **Session Start Hook**: At the start of each session for this project, read `tasks/lessons.md`
-> and apply relevant rules before proceeding. (Wire this via a `SessionStart` hook if possible.)
+**Session Start**: Read `tasks/lessons.md` and apply relevant rules before proceeding.
 
 ## Code Quality
 - **Simplicity first**: make every change as minimal and targeted as possible
