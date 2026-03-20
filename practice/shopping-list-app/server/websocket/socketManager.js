@@ -21,11 +21,25 @@ function initializeSocket(httpServer, corsOrigin) {
     const userId = socket.userId;
     const room = `user:${userId}`;
     socket.join(room);
+
+    // Token expiration auto-disconnect
+    if (socket.tokenExp) {
+      const remainingMs = (socket.tokenExp * 1000) - Date.now();
+      if (remainingMs > 0) {
+        socket.expirationTimer = setTimeout(() => {
+          socket.disconnect(true);
+        }, remainingMs);
+      }
+    }
+
     if (process.env.NODE_ENV === 'development') {
       console.log(`User ${userId} connected (socket: ${socket.id})`);
     }
 
     socket.on('disconnect', () => {
+      if (socket.expirationTimer) {
+        clearTimeout(socket.expirationTimer);
+      }
       if (process.env.NODE_ENV === 'development') {
         console.log(`Socket ${socket.id} disconnected`);
       }

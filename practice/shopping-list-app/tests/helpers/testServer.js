@@ -22,7 +22,22 @@ function createTestServer() {
   io.on('connection', (socket) => {
     const userId = socket.userId;
     socket.join(`user:${userId}`);
-    socket.on('disconnect', () => {});
+
+    // Token expiration auto-disconnect (mirrors socketManager.js)
+    if (socket.tokenExp) {
+      const remainingMs = (socket.tokenExp * 1000) - Date.now();
+      if (remainingMs > 0) {
+        socket.expirationTimer = setTimeout(() => {
+          socket.disconnect(true);
+        }, remainingMs);
+      }
+    }
+
+    socket.on('disconnect', () => {
+      if (socket.expirationTimer) {
+        clearTimeout(socket.expirationTimer);
+      }
+    });
   });
 
   // Middleware
