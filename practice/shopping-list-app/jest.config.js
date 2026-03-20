@@ -3,7 +3,7 @@ module.exports = {
   testMatch: ['<rootDir>/tests/**/*.test.js'],
   testTimeout: 10000,
   transform: {
-    'client/src/.+\\.js$': 'babel-jest',
+    '.+\\.js$': 'babel-jest',
   },
   transformIgnorePatterns: [
     '/node_modules/',

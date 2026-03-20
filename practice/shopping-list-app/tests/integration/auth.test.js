@@ -76,6 +76,10 @@ describe('Registration validation', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.user.email).toBe('alice@test.com');
+    expect(res.body).toHaveProperty('refreshToken');
+    expect(typeof res.body.refreshToken).toBe('string');
+    expect(res.body.refreshToken.length).toBe(64);
+    expect(res.body).toHaveProperty('user');
   });
 
   it('rejects duplicate email with different casing', async () => {
@@ -156,5 +160,9 @@ describe('Login validation', () => {
     expect(res.status).toBe(200);
     expect(res.body.token).toBeDefined();
     expect(res.body.user.email).toBe('login@test.com');
+    expect(res.body).toHaveProperty('refreshToken');
+    expect(typeof res.body.refreshToken).toBe('string');
+    expect(res.body.refreshToken.length).toBe(64);
+    expect(res.body).toHaveProperty('user');
   });
 });

@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.0",
+    "babel-jest": "^30.3.0",
     "concurrently": "^8.2.2",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
