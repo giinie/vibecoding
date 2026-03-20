@@ -39,3 +39,19 @@ CREATE INDEX IF NOT EXISTS idx_shopping_items_user_created
     ON shopping_items(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_shopping_items_user_purchased
     ON shopping_items(user_id, is_purchased);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    family_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    is_used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_family ON refresh_tokens(family_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
