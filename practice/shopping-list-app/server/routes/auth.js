@@ -12,7 +12,7 @@ function signAccessToken(userId) {
   return jwt.sign(
     { userId },
     process.env.JWT_SECRET,
-    { algorithm: 'HS256', expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { algorithm: 'HS256', expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
   );
 }
 
