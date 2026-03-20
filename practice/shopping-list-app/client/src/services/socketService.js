@@ -1,19 +1,23 @@
 import { io } from 'socket.io-client';
-import { getToken } from './authApi';
+import { getToken, refreshAccessToken, isTokenExpired } from './authApi';
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
 
 let socket = null;
 
-export function connect() {
+export function connect(onAuthFailure) {
   if (socket) {
     socket.disconnect();
   }
 
-  const token = getToken();
-
   socket = io(SOCKET_URL, {
-    auth: { token },
+    auth: async (cb) => {
+      let token = getToken();
+      if (isTokenExpired(token)) {
+        token = await refreshAccessToken();
+      }
+      cb({ token: token || '' });
+    },
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
@@ -33,9 +37,12 @@ export function connect() {
 
   socket.on('connect_error', (err) => {
     console.error('Socket connection error:', err.message);
-    if (err.message.includes('token') || err.message.includes('Authentication')) {
+    const errorType = err?.data?.type;
+    if (errorType === 'MISSING_TOKEN' || errorType === 'INVALID_TOKEN') {
       socket.disconnect();
+      onAuthFailure?.();
     }
+    // TOKEN_EXPIRED: let Socket.io auto-reconnect (auth function will refresh)
   });
 
   return socket;

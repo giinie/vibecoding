@@ -1,4 +1,4 @@
-import { getToken, logout } from './authApi';
+import { getToken, logout, refreshAccessToken } from './authApi';
 
 export const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -24,4 +24,26 @@ export async function handleErrorResponse(response, defaultMessage) {
     if (e instanceof SyntaxError) throw new Error(defaultMessage);
     throw e;
   }
+}
+
+export async function fetchWithAuth(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: { ...authHeaders(options.headers) },
+  });
+
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      // refreshAccessToken() already calls logout() on failure — don't duplicate
+      throw new Error('인증이 필요합니다.');
+    }
+    const retryResponse = await fetch(url, {
+      ...options,
+      headers: { ...authHeaders(options.headers) },
+    });
+    return retryResponse;
+  }
+
+  return response;
 }

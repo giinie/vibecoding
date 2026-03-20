@@ -1,4 +1,4 @@
-import { BASE_URL, authHeaders, handleErrorResponse } from './apiUtils';
+import { BASE_URL, handleErrorResponse, fetchWithAuth } from './apiUtils';
 
 export function transformItem(item) {
   return {
@@ -14,9 +14,7 @@ export function transformItem(item) {
 
 export async function fetchShoppingItems(userId, params = {}) {
   const query = new URLSearchParams(params);
-  const response = await fetch(`${BASE_URL}/shopping-items/${userId}?${query}`, {
-    headers: authHeaders(),
-  });
+  const response = await fetchWithAuth(`${BASE_URL}/shopping-items/${userId}?${query}`);
   await handleErrorResponse(response, '쇼핑 목록을 불러오는데 실패했습니다.');
   const data = await response.json();
   return {
@@ -26,9 +24,9 @@ export async function fetchShoppingItems(userId, params = {}) {
 }
 
 export async function createShoppingItem({ name, quantity, unit }) {
-  const response = await fetch(`${BASE_URL}/shopping-items`, {
+  const response = await fetchWithAuth(`${BASE_URL}/shopping-items`, {
     method: 'POST',
-    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, quantity, unit }),
   });
   await handleErrorResponse(response, '아이템 추가에 실패했습니다.');
@@ -36,18 +34,16 @@ export async function createShoppingItem({ name, quantity, unit }) {
 }
 
 export async function toggleShoppingItem(id) {
-  const response = await fetch(`${BASE_URL}/shopping-items/${id}/toggle`, {
+  const response = await fetchWithAuth(`${BASE_URL}/shopping-items/${id}/toggle`, {
     method: 'PATCH',
-    headers: authHeaders(),
   });
   await handleErrorResponse(response, '상태 변경에 실패했습니다.');
   return response.json();
 }
 
 export async function deleteShoppingItem(id) {
-  const response = await fetch(`${BASE_URL}/shopping-items/${id}`, {
+  const response = await fetchWithAuth(`${BASE_URL}/shopping-items/${id}`, {
     method: 'DELETE',
-    headers: authHeaders(),
   });
   await handleErrorResponse(response, '아이템 삭제에 실패했습니다.');
   return response.status === 204 ? null : response.json();
