@@ -44,6 +44,7 @@ function getTestToken(userId) {
 
 function clearTestData() {
   if (testDb) {
+    testDb.exec('DELETE FROM refresh_tokens');
     testDb.exec('DELETE FROM shopping_items');
     testDb.exec('DELETE FROM notifications');
     testDb.exec('DELETE FROM users');
@@ -70,6 +71,7 @@ function teardownTestDatabase() {
   delete require.cache[require.resolve('../../server/controllers/shoppingItemController')];
   delete require.cache[require.resolve('../../server/routes/shoppingItems')];
   delete require.cache[require.resolve('../../server/websocket/shoppingItemEmitter')];
+  delete require.cache[require.resolve('../../server/models/refreshTokenModel')];
 }
 
 function getTestDatabase() {
