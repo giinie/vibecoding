@@ -91,10 +91,12 @@ function handleCreateError(res, err) {
     return sendError(res, 400, 'Invalid user_id');
   }
 
+  console.error('Failed to create notification:', err);
   return sendError(res, 500, 'Failed to create notification');
 }
 
-function handleServerError(res, errorMessage) {
+function handleServerError(res, errorMessage, err) {
+  console.error(`${errorMessage}:`, err);
   return sendError(res, 500, errorMessage);
 }
 
@@ -141,7 +143,7 @@ const notificationController = {
 
       return res.json(result);
     } catch (err) {
-      return handleServerError(res, 'Failed to fetch notifications');
+      return handleServerError(res, 'Failed to fetch notifications', err);
     }
   },
 
@@ -162,7 +164,7 @@ const notificationController = {
 
       return res.json(notification);
     } catch (err) {
-      return handleServerError(res, 'Failed to mark notification as read');
+      return handleServerError(res, 'Failed to mark notification as read', err);
     }
   },
 
@@ -175,7 +177,7 @@ const notificationController = {
 
       return res.json(result);
     } catch (err) {
-      return handleServerError(res, 'Failed to mark all notifications as read');
+      return handleServerError(res, 'Failed to mark all notifications as read', err);
     }
   },
 
@@ -195,7 +197,7 @@ const notificationController = {
 
       return res.status(204).send();
     } catch (err) {
-      return handleServerError(res, 'Failed to delete notification');
+      return handleServerError(res, 'Failed to delete notification', err);
     }
   },
 };

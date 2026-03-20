@@ -1,7 +1,12 @@
 const { setupTestDatabase, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
 const { createTestServer, stopTestServer } = require('../helpers/testServer');
 
+/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
+/** @typedef {import('http').Server} HttpServer */
+
+/** @type {SuperTestAgent} */
 let agent;
+/** @type {HttpServer} */
 let server;
 
 beforeAll(() => {

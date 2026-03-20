@@ -2,12 +2,26 @@ const { io: ioClient } = require('socket.io-client');
 const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
 const { createTestServer, startTestServer, stopTestServer } = require('../helpers/testServer');
 
+/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
+/** @typedef {import('http').Server} HttpServer */
+/** @typedef {import('socket.io-client').Socket} ClientSocket */
+/** @typedef {{ id: string, name: string, email: string }} TestUser */
+
+/** @type {HttpServer} */
 let server;
+/** @type {SuperTestAgent} */
 let agent;
+/** @type {number} */
 let port;
+/** @type {TestUser} */
 let testUser;
+/** @type {string} */
 let token;
 
+/**
+ * @param {string} userId
+ * @returns {Promise<ClientSocket>}
+ */
 function connectClient(userId) {
   const clientToken = getTestToken(userId);
   return new Promise((resolve) => {
@@ -20,6 +34,12 @@ function connectClient(userId) {
   });
 }
 
+/**
+ * @param {ClientSocket} client
+ * @param {string} event
+ * @param {number} [timeoutMs=3000]
+ * @returns {Promise<*>}
+ */
 function waitForEvent(client, event, timeoutMs = 3000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`Timeout waiting for event: ${event}`)), timeoutMs);
