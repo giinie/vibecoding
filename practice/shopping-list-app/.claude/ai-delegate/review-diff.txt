@@ -1,0 +1,243 @@
+diff --git a/practice/shopping-list-app/tests/integration/auth.test.js b/practice/shopping-list-app/tests/integration/auth.test.js
+index 43d9d50..2b908b0 100644
+--- a/practice/shopping-list-app/tests/integration/auth.test.js
++++ b/practice/shopping-list-app/tests/integration/auth.test.js
+@@ -1,7 +1,12 @@
+ const { setupTestDatabase, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {HttpServer} */
+ let server;
+ 
+ beforeAll(() => {
+diff --git a/practice/shopping-list-app/tests/integration/notification.api.test.js b/practice/shopping-list-app/tests/integration/notification.api.test.js
+index 17191e0..92eecdd 100644
+--- a/practice/shopping-list-app/tests/integration/notification.api.test.js
++++ b/practice/shopping-list-app/tests/integration/notification.api.test.js
+@@ -1,9 +1,17 @@
+ const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++/** @typedef {{ id: string, name: string, email: string }} TestUser */
++
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {HttpServer} */
+ let server;
++/** @type {TestUser} */
+ let testUser;
++/** @type {string} */
+ let token;
+ 
+ beforeAll(() => {
+@@ -292,6 +300,7 @@ describe('GET /api/notifications/:userId', () => {
+ });
+ 
+ describe('PATCH /api/notifications/:id/read', () => {
++  /** @type {string} */
+   let notificationId;
+ 
+   beforeEach(async () => {
+@@ -360,6 +369,7 @@ describe('PATCH /api/notifications/read-all/:userId', () => {
+ });
+ 
+ describe('DELETE /api/notifications/:id', () => {
++  /** @type {string} */
+   let notificationId;
+ 
+   beforeEach(async () => {
+diff --git a/practice/shopping-list-app/tests/integration/notification.auth.test.js b/practice/shopping-list-app/tests/integration/notification.auth.test.js
+index 7e5b655..9a539da 100644
+--- a/practice/shopping-list-app/tests/integration/notification.auth.test.js
++++ b/practice/shopping-list-app/tests/integration/notification.auth.test.js
+@@ -1,9 +1,17 @@
+ const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++/** @typedef {{ id: string, name: string, email: string }} TestUser */
++
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {HttpServer} */
+ let server;
++/** @type {TestUser} */
+ let testUser;
++/** @type {string} */
+ let token;
+ 
+ beforeAll(() => {
+diff --git a/practice/shopping-list-app/tests/integration/notification.flow.test.js b/practice/shopping-list-app/tests/integration/notification.flow.test.js
+index 636fff1..fb50ce5 100644
+--- a/practice/shopping-list-app/tests/integration/notification.flow.test.js
++++ b/practice/shopping-list-app/tests/integration/notification.flow.test.js
+@@ -2,10 +2,22 @@ const { io: ioClient } = require('socket.io-client');
+ const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, startTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++/** @typedef {import('socket.io-client').Socket} ClientSocket */
++/** @typedef {{ id: string, name: string, email: string }} TestUser */
++
++/** @type {HttpServer} */
+ let server;
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {number} */
+ let port;
+ 
++/**
++ * @param {string} userId
++ * @returns {Promise<ClientSocket>}
++ */
+ function connectClient(userId) {
+   const token = getTestToken(userId);
+   return new Promise((resolve) => {
+@@ -18,6 +30,12 @@ function connectClient(userId) {
+   });
+ }
+ 
++/**
++ * @param {ClientSocket} client
++ * @param {string} event
++ * @param {number} [timeoutMs=3000]
++ * @returns {Promise<*>}
++ */
+ function waitForEvent(client, event, timeoutMs = 3000) {
+   return new Promise((resolve, reject) => {
+     const timer = setTimeout(() => reject(new Error(`Timeout waiting for event: ${event}`)), timeoutMs);
+diff --git a/practice/shopping-list-app/tests/integration/notification.websocket.test.js b/practice/shopping-list-app/tests/integration/notification.websocket.test.js
+index f8a639c..1c8a0ad 100644
+--- a/practice/shopping-list-app/tests/integration/notification.websocket.test.js
++++ b/practice/shopping-list-app/tests/integration/notification.websocket.test.js
+@@ -2,12 +2,26 @@ const { io: ioClient } = require('socket.io-client');
+ const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, startTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++/** @typedef {import('socket.io-client').Socket} ClientSocket */
++/** @typedef {{ id: string, name: string, email: string }} TestUser */
++
++/** @type {HttpServer} */
+ let server;
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {number} */
+ let port;
++/** @type {TestUser} */
+ let testUser;
++/** @type {string} */
+ let token;
+ 
++/**
++ * @param {string} userId
++ * @returns {Promise<ClientSocket>}
++ */
+ function connectClient(userId) {
+   const token = getTestToken(userId);
+   return new Promise((resolve) => {
+@@ -20,6 +34,12 @@ function connectClient(userId) {
+   });
+ }
+ 
++/**
++ * @param {ClientSocket} client
++ * @param {string} event
++ * @param {number} [timeoutMs=3000]
++ * @returns {Promise<*>}
++ */
+ function waitForEvent(client, event, timeoutMs = 3000) {
+   return new Promise((resolve, reject) => {
+     const timer = setTimeout(() => reject(new Error(`Timeout waiting for event: ${event}`)), timeoutMs);
+diff --git a/practice/shopping-list-app/tests/integration/shoppingItem.api.test.js b/practice/shopping-list-app/tests/integration/shoppingItem.api.test.js
+index e2fb844..a82a51a 100644
+--- a/practice/shopping-list-app/tests/integration/shoppingItem.api.test.js
++++ b/practice/shopping-list-app/tests/integration/shoppingItem.api.test.js
+@@ -1,9 +1,17 @@
+ const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++/** @typedef {{ id: string, name: string, email: string }} TestUser */
++
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {HttpServer} */
+ let server;
++/** @type {TestUser} */
+ let testUser;
++/** @type {string} */
+ let token;
+ 
+ beforeAll(() => {
+@@ -189,6 +197,7 @@ describe('GET /api/shopping-items/:userId', () => {
+ });
+ 
+ describe('PATCH /api/shopping-items/:id/toggle', () => {
++  /** @type {string} */
+   let itemId;
+ 
+   beforeEach(async () => {
+@@ -242,6 +251,7 @@ describe('PATCH /api/shopping-items/:id/toggle', () => {
+ });
+ 
+ describe('DELETE /api/shopping-items/:id', () => {
++  /** @type {string} */
+   let itemId;
+ 
+   beforeEach(async () => {
+diff --git a/practice/shopping-list-app/tests/integration/shoppingItem.websocket.test.js b/practice/shopping-list-app/tests/integration/shoppingItem.websocket.test.js
+index 50c0ff8..4666c5f 100644
+--- a/practice/shopping-list-app/tests/integration/shoppingItem.websocket.test.js
++++ b/practice/shopping-list-app/tests/integration/shoppingItem.websocket.test.js
+@@ -2,12 +2,26 @@ const { io: ioClient } = require('socket.io-client');
+ const { setupTestDatabase, seedTestUser, getTestToken, clearTestData, teardownTestDatabase } = require('../helpers/testDb');
+ const { createTestServer, startTestServer, stopTestServer } = require('../helpers/testServer');
+ 
++/** @typedef {import('supertest').SuperTest<import('supertest').Test>} SuperTestAgent */
++/** @typedef {import('http').Server} HttpServer */
++/** @typedef {import('socket.io-client').Socket} ClientSocket */
++/** @typedef {{ id: string, name: string, email: string }} TestUser */
++
++/** @type {HttpServer} */
+ let server;
++/** @type {SuperTestAgent} */
+ let agent;
++/** @type {number} */
+ let port;
++/** @type {TestUser} */
+ let testUser;
++/** @type {string} */
+ let token;
+ 
++/**
++ * @param {string} userId
++ * @returns {Promise<ClientSocket>}
++ */
+ function connectClient(userId) {
+   const clientToken = getTestToken(userId);
+   return new Promise((resolve) => {
+@@ -20,6 +34,12 @@ function connectClient(userId) {
+   });
+ }
+ 
++/**
++ * @param {ClientSocket} client
++ * @param {string} event
++ * @param {number} [timeoutMs=3000]
++ * @returns {Promise<*>}
++ */
+ function waitForEvent(client, event, timeoutMs = 3000) {
+   return new Promise((resolve, reject) => {
+     const timer = setTimeout(() => reject(new Error(`Timeout waiting for event: ${event}`)), timeoutMs);

@@ -5,6 +5,40 @@
 
 ## [Unreleased]
 
+### 2026-03-20 (Refresh Token 시스템 + 클라이언트 자동 갱신)
+
+#### Added
+- **Refresh Token 인프라** (서버)
+  - `server/models/refreshTokenModel.js`: create, createWithFamily, findByToken, markUsed, deleteFamily, deleteByUser, deleteExpired, countFamilies, deleteOldestFamily
+  - `server/db/schema.sql`: `refresh_tokens` 테이블 추가 (id, user_id, token, family_id, expires_at, is_used, created_at; 인덱스 4개)
+  - `server/routes/auth.js`: `POST /api/auth/refresh` — 리프레시 토큰 rotation; 재사용 감지 시 family 전체 폐기
+  - `server/routes/auth.js`: `POST /api/auth/logout` — refresh token family 서버 측 폐기
+  - 로그인/회원가입 응답에 `refreshToken` 필드 추가 (`{ token, refreshToken, user }`)
+  - 사용자당 최대 5개 family 제한 (초과 시 가장 오래된 family 삭제)
+
+- **클라이언트 자동 갱신** (클라이언트)
+  - `client/src/services/authApi.js`: `refreshAccessToken()` — mutex 기반 단일 갱신 (동시 401 중복 방지)
+  - `client/src/services/authApi.js`: `isTokenExpired()` — JWT payload `exp` 클라이언트 사이드 검사
+  - `client/src/services/authApi.js`: `REFRESH_TOKEN_KEY` 상수, `logout()` 서버 측 폐기 fire-and-forget 추가
+  - `client/src/services/apiUtils.js`: `fetchWithAuth()` — 401 시 자동 토큰 갱신 후 재시도 (1회)
+  - `client/src/services/socketService.js`: async auth 함수 패턴 — 연결 전 토큰 만료 시 자동 갱신
+  - `client/src/context/SocketContext.js`: `onAuthFailure` prop 추가 (복구 불가 소켓 인증 실패 시 콜백)
+
+- **WebSocket 토큰 만료 처리**
+  - `server/websocket/socketAuthMiddleware.js`: `SOCKET_AUTH_ERRORS` 상수 export, `socket.tokenExp` 설정
+  - `server/websocket/socketManager.js`: access token 만료 시점에 소켓 자동 연결 해제 타이머 (`setTimeout`)
+
+- **테스트**
+  - `tests/integration/auth.refresh.test.js`: refresh/logout/replay 탐지 통합 테스트
+  - `tests/integration/socketAuth.expiry.test.js`: 토큰 만료 후 소켓 자동 해제 테스트
+  - `tests/unit/refreshTokenModel.test.js`: refreshTokenModel 단위 테스트
+  - `tests/unit/isTokenExpired.test.js`: isTokenExpired() 단위 테스트
+
+#### Changed
+- `server/routes/auth.js`: `signToken()` → `signAccessToken()` (이름 변경), access token 기본 TTL `7d` → `15m`
+- `client/src/services/notificationApi.js`, `shoppingItemApi.js`: 모든 인증 API 호출을 `fetchWithAuth()`로 마이그레이션
+- `CLAUDE.md`: 위 변경사항 전체 반영 (JWT auth flow, 토큰 TTL, 새 endpoints, 파일 맵, 테스트 목록)
+
 ### 2026-03-12 (ai-* 스킬 Team 실행 모델 + 문서 동기화)
 
 #### Changed
