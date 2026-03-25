@@ -3,7 +3,7 @@
 > **작성일**: 2026-02-16
 > **브랜치**: `practice`
 > **이전 작업**: Phase 1-4 보안 강화 (JWT, helmet, rate limiting, input validation, UUID 검증 등)
-> **상태**: 완전 구현 완료. 결정 기록 용도로 보존.
+> **상태**: Phase A-C 완전 구현 완료. 범위 외 5건 중 1건 부분 해결 (refresh token rotation, 2026-03-20). 결정 기록 용도로 보존.
 
 ---
 
@@ -91,7 +91,7 @@ Time:        2.352s
 
 | 항목 | 이유 | 상태 |
 |------|------|------|
-| JWT 토큰 폐기 메커니즘 | Redis/DB 블랙리스트 필요 (아키텍처 변경) | 미해결 |
+| JWT 토큰 폐기 메커니즘 | Redis/DB 블랙리스트 필요 (아키텍처 변경) | 부분 해결 (refresh token rotation 도입, 2026-03-20. Access token blocklist 미구현) |
 | localStorage → httpOnly 쿠키 | 서버 세션 관리 전환 필요 | 미해결 |
 | WebSocket Rate Limiting | 추가 미들웨어/라이브러리 필요 | 미해결 |
 | 계정 열거 방지 (409 → 400) | UX 트레이드오프 논의 필요 | 미해결 |

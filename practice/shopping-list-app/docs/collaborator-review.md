@@ -4,6 +4,8 @@
 > **대상**: 프로젝트 기여자 (Gi-in Jeong)
 > **목적**: 보안 감사 과정에서 관찰된 개발 프로세스 개선점 정리
 
+**TL;DR**: 보안 감사 과정에서 발견된 6개 영역 개선 제안 — 보안 체크리스트 선행 적용, 입력 검증 일관성, 에러 정보 유출 방지, 실패 케이스 테스트 비중 확대, `.env.example` 환경 설정 관리, 범위 외 보안 항목 후속 계획.
+
 ---
 
 ## 전체 평가
@@ -119,7 +121,7 @@ JWT_SECRET=your-secret-here
 PORT=3001
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000
-JWT_EXPIRES_IN=7d
+JWT_EXPIRES_IN=15m
 TRUST_PROXY=          # Set to 1 behind reverse proxy
 ```
 

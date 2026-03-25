@@ -83,7 +83,7 @@ router.post('/login', (req, res) => {
   // 1. DB에서 사용자 조회
   // 2. 비밀번호 검증 (bcrypt)
   // 3. JWT 토큰 발급
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
   res.json({ token, user: { id: user.id, name: user.name } });
 });
 ```

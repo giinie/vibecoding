@@ -5,6 +5,11 @@
 
 ## [Unreleased]
 
+### 2026-03-25
+
+#### Refactored
+- `server/controllers/notificationController.js`: 에러 로깅 추가 및 `handleServerError` 인자 개선 (commit abdeb83)
+
 ### 2026-03-20 (Refresh Token 시스템 + 클라이언트 자동 갱신)
 
 #### Added
