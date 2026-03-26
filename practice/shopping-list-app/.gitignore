@@ -1,5 +1,6 @@
 node_modules/
 .omc/
+.omx/
 .env
 server/db/*.db
 .claude/settings.local.json
