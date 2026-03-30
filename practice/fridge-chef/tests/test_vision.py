@@ -80,7 +80,7 @@ class TestConfig:
     def test_config_values(self):
         """Test configuration values."""
         assert Config.VISION_MODEL == "nvidia/nemotron-nano-12b-v2-vl:free"
-        assert Config.RECIPE_MODEL == "nex-agi/deepseek-v3.1-nex-n1:free"
+        assert Config.RECIPE_MODEL == "nex-agi/deepseek-v3.1-nex-n1"
         assert Config.MAX_IMAGE_SIZE_MB == 10
 
     def test_validate_with_api_key(self):

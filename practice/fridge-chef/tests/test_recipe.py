@@ -168,7 +168,7 @@ class TestRecipeService:
         """Test service initialization."""
         if Config.validate():
             service = RecipeService()
-            assert service.model == "nex-agi/deepseek-v3.1-nex-n1:free"
+            assert service.model == "nex-agi/deepseek-v3.1-nex-n1"
 
     def test_build_prompt(self):
         """Test prompt building."""

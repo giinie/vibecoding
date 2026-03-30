@@ -107,10 +107,11 @@ pages/
 ### Phase 6: 테스트 작성
 ```
 tests/
-├── test_auth.py          # 14 tests
-├── test_user.py          # 9 tests
+├── test_auth.py          # 18 tests
+├── test_user.py          # 10 tests
 ├── test_recommendation.py # 9 tests
-└── test_sharing.py       # 10 tests
+├── test_sharing.py       # 12 tests
+└── test_session_recipes.py # 5 tests
 ```
 
 ### Phase 7: 버그 수정
@@ -164,7 +165,7 @@ tests/
 
 ### 5.1 테스트 현황
 ```
-66 tests passed in 9.53s
+79 tests passed
 ```
 
 ### 5.2 생성된 파일 목록
@@ -220,6 +221,7 @@ tests/
 
 ### 6.4 공유
 - 고유 share_id 생성 (base64 URL-safe)
+- 공유 링크는 `APP_BASE_URL` + `?share_id=...` 형식으로 생성
 - QR 코드 생성 (qrcode 라이브러리)
 - SNS 공유 링크 (카카오톡, 트위터, 페이스북)
 

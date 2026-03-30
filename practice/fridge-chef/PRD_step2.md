@@ -2,7 +2,7 @@
 
 ## Overview
 
-This phase implements recipe generation functionality using ingredients identified in Step 1. The system uses the `nex-agi/deepseek-v3.1-nex-n1:free` model via OpenRouter to generate personalized Korean recipes.
+This phase implements recipe generation functionality using ingredients identified in Step 1. The system uses the `nex-agi/deepseek-v3.1-nex-n1` model via OpenRouter to generate personalized Korean recipes.
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ This phase implements recipe generation functionality using ingredients identifi
 |-----------|------------|
 | Runtime | Python 3.14.2 with uv (vibecoding environment) |
 | Web Framework | Streamlit (extended from Step 1) |
-| AI Model | nex-agi/deepseek-v3.1-nex-n1:free via OpenRouter |
+| AI Model | nex-agi/deepseek-v3.1-nex-n1 via OpenRouter |
 | State Management | Streamlit session_state |
 
 ## Functional Requirements
@@ -184,7 +184,7 @@ class RecipeService:
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "nex-agi/deepseek-v3.1-nex-n1:free"
+        self.model = "nex-agi/deepseek-v3.1-nex-n1"
 
     def generate_recipes(
         self,
@@ -209,8 +209,8 @@ st.session_state.recognized_ingredients = ["양파", "당근", "계란"]
 ingredients = st.session_state.get('recognized_ingredients', [])
 st.session_state.generated_recipes = recipes
 
-# Step 3 reads saved recipes
-saved_recipes = st.session_state.get('saved_recipes', [])
+# Step 3 reads guest-saved recipes from session state
+saved_recipes = st.session_state.get('saved_recipes', [])  # list[dict]
 ```
 
 ### Additional Dependencies

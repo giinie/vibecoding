@@ -11,6 +11,7 @@ from services.user import UserRecipeService
 from services.recommendation import RecommendationService
 from components.recipe_card import render_recipe_card
 from components.share_modal import render_share_modal
+from utils.session_recipes import deduplicate_saved_recipes
 
 st.set_page_config(
     page_title="저장된 레시피 - Fridge Chef",
@@ -68,6 +69,16 @@ def handle_share(saved_recipe: dict):
     st.session_state.share_recipe_id = saved_recipe.get("id")
 
 
+def handle_guest_delete(index: int):
+    """Remove a guest-saved recipe from session state."""
+    guest_recipes = deduplicate_saved_recipes(st.session_state.saved_recipes)
+    if 0 <= index < len(guest_recipes):
+        guest_recipes.pop(index)
+        st.session_state.saved_recipes = guest_recipes
+        st.success("임시 저장 레시피를 삭제했습니다.")
+        st.rerun()
+
+
 def render_rating_widget(saved_recipe: dict, key: str):
     """Render rating widget."""
     current_rating = saved_recipe.get("rating") or 0
@@ -97,9 +108,34 @@ def main():
     st.title("💾 저장된 레시피")
 
     if not st.session_state.is_authenticated:
-        st.warning("레시피를 저장하려면 로그인이 필요합니다.")
-        if st.button("👤 로그인하기"):
-            st.switch_page("pages/3_👤_내_프로필.py")
+        guest_recipes = deduplicate_saved_recipes(st.session_state.saved_recipes)
+        st.session_state.saved_recipes = guest_recipes
+
+        st.info("현재는 이 브라우저에 임시 저장된 레시피만 볼 수 있습니다. 로그인하면 계정에 영구 저장됩니다.")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("👤 로그인하기", use_container_width=True):
+                st.switch_page("pages/3_👤_내_프로필.py")
+        with col2:
+            if st.button("📖 레시피 생성하기", use_container_width=True):
+                st.switch_page("pages/2_📖_레시피_생성.py")
+
+        if not guest_recipes:
+            st.warning("임시 저장된 레시피가 없습니다.")
+            return
+
+        st.divider()
+        st.markdown(f"### 💾 임시 저장 {len(guest_recipes)}개")
+
+        for idx, recipe_data in enumerate(guest_recipes):
+            with st.container():
+                render_recipe_card(
+                    recipe_data=recipe_data,
+                    show_actions=False,
+                    key_prefix=f"guest_saved_{idx}",
+                )
+                if st.button("🗑️ 임시 저장 삭제", key=f"guest_delete_{idx}", use_container_width=True):
+                    handle_guest_delete(idx)
         return
 
     service = UserRecipeService(st.session_state.user_id)
@@ -202,6 +238,7 @@ def main():
                 render_share_modal(
                     recipe_data=recipe_data,
                     saved_recipe_id=saved_recipe["id"],
+                    user_id=st.session_state.user_id,
                     key_prefix=f"share_{idx}",
                 )
 

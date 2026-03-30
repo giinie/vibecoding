@@ -7,19 +7,8 @@ from datetime import datetime
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from db.init_db import init_database
-from db.database import engine
-from db.models import Base
 from services.auth import AuthService
 from services.recommendation import RecommendationService
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Set up and tear down test database."""
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture

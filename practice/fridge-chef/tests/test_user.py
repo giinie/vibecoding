@@ -6,19 +6,8 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from db.init_db import init_database
-from db.database import engine
-from db.models import Base
 from services.auth import AuthService
 from services.user import UserRecipeService
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Set up and tear down test database."""
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -159,3 +148,24 @@ class TestUserRecipeService:
         service.update_recipe(recipe_id, rating=0)
         recipe = service.get_recipe(recipe_id)
         assert recipe["rating"] == 1
+
+    def test_has_recipe_returns_true_for_equivalent_recipe(self, test_user, sample_recipe):
+        """Equivalent recipe payloads should be detected even if key order differs."""
+        service = UserRecipeService(test_user.id)
+        service.save_recipe(sample_recipe)
+
+        reordered_recipe = {
+            "tips": sample_recipe["tips"],
+            "instructions": sample_recipe["instructions"],
+            "ingredients": {
+                "additional_needed": sample_recipe["ingredients"]["additional_needed"],
+                "available": sample_recipe["ingredients"]["available"],
+            },
+            "servings": sample_recipe["servings"],
+            "cooking_time": sample_recipe["cooking_time"],
+            "difficulty": sample_recipe["difficulty"],
+            "description": sample_recipe["description"],
+            "name": sample_recipe["name"],
+        }
+
+        assert service.has_recipe(reordered_recipe) is True

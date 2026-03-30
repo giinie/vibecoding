@@ -8,6 +8,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from db.init_db import init_database
 from services.auth import AuthService
+from services.user import UserRecipeService
+from utils.session_recipes import deduplicate_saved_recipes
 
 st.set_page_config(
     page_title="내 프로필 - Fridge Chef",
@@ -27,6 +29,28 @@ def init_session_state():
         st.session_state.is_authenticated = False
     if "username" not in st.session_state:
         st.session_state.username = None
+    if "saved_recipes" not in st.session_state:
+        st.session_state.saved_recipes = []
+    if "post_login_notice" not in st.session_state:
+        st.session_state.post_login_notice = None
+
+
+def import_guest_saved_recipes(user_id: int) -> tuple[int, int]:
+    """Persist guest-saved recipes into the logged-in user's account."""
+    guest_recipes = deduplicate_saved_recipes(st.session_state.get("saved_recipes"))
+    if not guest_recipes:
+        return 0, 0
+
+    service = UserRecipeService(user_id)
+    imported_count = 0
+    for recipe_data in guest_recipes:
+        if service.has_recipe(recipe_data):
+            continue
+        service.save_recipe(recipe_data)
+        imported_count += 1
+
+    st.session_state.saved_recipes = []
+    return imported_count, len(guest_recipes)
 
 
 def render_login_form():
@@ -47,6 +71,15 @@ def render_login_form():
                     st.session_state.user_id = user.id
                     st.session_state.is_authenticated = True
                     st.session_state.username = user.username
+                    imported_count, guest_recipe_count = import_guest_saved_recipes(user.id)
+                    if imported_count:
+                        st.session_state.post_login_notice = (
+                            f"임시 저장한 레시피 {imported_count}개를 계정에 저장했습니다."
+                        )
+                    elif guest_recipe_count:
+                        st.session_state.post_login_notice = (
+                            "임시 저장 레시피는 이미 계정에 있거나 모두 정리되어 추가 저장하지 않았습니다."
+                        )
                     st.success("로그인 성공!")
                     st.rerun()
                 else:
@@ -274,6 +307,10 @@ def main():
     init_session_state()
 
     st.title("👤 내 프로필")
+
+    if st.session_state.post_login_notice:
+        st.success(st.session_state.post_login_notice)
+        st.session_state.post_login_notice = None
 
     if st.session_state.is_authenticated:
         render_profile_settings()

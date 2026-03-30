@@ -1,17 +1,25 @@
 """Social sharing service for recipes."""
 import secrets
 from io import BytesIO
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import qrcode
 
 from db.database import get_db
 from db.models import SavedRecipe
+from services.config import Config
 
 
 class SharingService:
     """Service for generating shareable recipe links and content."""
 
-    BASE_URL = "http://localhost:8501"  # POC local URL
+    @staticmethod
+    def _get_owned_recipe(session, saved_recipe_id: int, user_id: int | None) -> SavedRecipe | None:
+        """Return a recipe scoped to the requested owner when provided."""
+        query = session.query(SavedRecipe).filter(SavedRecipe.id == saved_recipe_id)
+        if user_id is not None:
+            query = query.filter(SavedRecipe.user_id == user_id)
+        return query.first()
 
     @staticmethod
     def generate_share_id() -> str:
@@ -32,7 +40,19 @@ class SharingService:
         Returns:
             Full shareable URL.
         """
-        return f"{SharingService.BASE_URL}/r/{share_id}"
+        base_url = Config.APP_BASE_URL.rstrip("/")
+        parsed = urlsplit(base_url)
+        query_params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        query_params["share_id"] = share_id
+        return urlunsplit(
+            (
+                parsed.scheme,
+                parsed.netloc,
+                parsed.path,
+                urlencode(query_params),
+                parsed.fragment,
+            )
+        )
 
     @staticmethod
     def generate_qr_code(url: str) -> BytesIO:
@@ -95,19 +115,18 @@ class SharingService:
         return text
 
     @staticmethod
-    def enable_sharing(saved_recipe_id: int) -> str | None:
+    def enable_sharing(saved_recipe_id: int, user_id: int | None = None) -> str | None:
         """Enable sharing for a saved recipe.
 
         Args:
             saved_recipe_id: Saved recipe ID.
+            user_id: Optional owner ID used to enforce authorization.
 
         Returns:
             Share ID if successful, None otherwise.
         """
         with get_db() as session:
-            recipe = session.query(SavedRecipe).filter(
-                SavedRecipe.id == saved_recipe_id
-            ).first()
+            recipe = SharingService._get_owned_recipe(session, saved_recipe_id, user_id)
 
             if not recipe:
                 return None
@@ -138,19 +157,18 @@ class SharingService:
             return None
 
     @staticmethod
-    def disable_sharing(saved_recipe_id: int) -> bool:
+    def disable_sharing(saved_recipe_id: int, user_id: int | None = None) -> bool:
         """Disable sharing for a recipe.
 
         Args:
             saved_recipe_id: Saved recipe ID.
+            user_id: Optional owner ID used to enforce authorization.
 
         Returns:
             True if successful.
         """
         with get_db() as session:
-            recipe = session.query(SavedRecipe).filter(
-                SavedRecipe.id == saved_recipe_id
-            ).first()
+            recipe = SharingService._get_owned_recipe(session, saved_recipe_id, user_id)
 
             if recipe:
                 recipe.share_id = None

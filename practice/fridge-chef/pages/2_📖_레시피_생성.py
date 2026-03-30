@@ -11,6 +11,7 @@ from services.config import Config
 from services.user import UserRecipeService
 from db.init_db import init_database
 from models.recipe import Recipe
+from utils.session_recipes import deduplicate_saved_recipes, recipe_signature, serialize_recipe_for_session
 
 # Ensure database is initialized (singleton - safe to call multiple times)
 init_database()
@@ -206,10 +207,15 @@ def render_recipe_card(recipe: Recipe, idx: int):
                     st.success("레시피가 저장되었습니다!")
                 else:
                     # Save to session state for guests
-                    if recipe not in st.session_state.saved_recipes:
-                        st.session_state.saved_recipes.append(recipe)
+                    recipe_data = serialize_recipe_for_session(recipe)
+                    saved_recipes = deduplicate_saved_recipes(st.session_state.saved_recipes)
+                    existing_signatures = {recipe_signature(saved) for saved in saved_recipes}
+                    if recipe_signature(recipe_data) not in existing_signatures:
+                        saved_recipes.append(recipe_data)
+                        st.session_state.saved_recipes = saved_recipes
                         st.success("레시피가 저장되었습니다! (로그인하면 영구 저장됩니다)")
                     else:
+                        st.session_state.saved_recipes = saved_recipes
                         st.info("이미 저장된 레시피입니다.")
 
         st.markdown("---")
@@ -347,6 +353,8 @@ def main():
     else:
         if st.session_state.saved_recipes:
             st.sidebar.markdown(f"💾 임시 저장: **{len(st.session_state.saved_recipes)}개**")
+            if st.sidebar.button("💾 임시 저장 보기"):
+                st.switch_page("pages/4_💾_저장된_레시피.py")
         st.sidebar.info("로그인하면 레시피를 영구 저장할 수 있습니다.")
         if st.sidebar.button("👤 로그인하기"):
             st.switch_page("pages/3_👤_내_프로필.py")

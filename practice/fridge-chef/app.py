@@ -7,7 +7,9 @@ Main application entry point.
 import streamlit as st
 
 # Initialize database on app startup (singleton - only runs once)
+from components.recipe_card import render_recipe_card
 from db.init_db import init_database
+from services.sharing import SharingService
 init_database()
 
 st.set_page_config(
@@ -41,9 +43,42 @@ def init_session_state():
             st.session_state[key] = default_value
 
 
+def _get_query_value(key: str) -> str | None:
+    """Safely read a single query-param value from Streamlit."""
+    value = st.query_params.get(key)
+    if isinstance(value, list):
+        return value[0] if value else None
+    return value
+
+
+def render_shared_recipe_page(share_id: str) -> None:
+    """Render a shared recipe entrypoint from a query parameter."""
+    st.title("📤 공유된 레시피")
+    shared_recipe = SharingService.get_shared_recipe(share_id)
+
+    if not shared_recipe:
+        st.error("공유 링크가 유효하지 않거나 더 이상 사용할 수 없습니다.")
+    else:
+        st.success("공유된 레시피를 불러왔습니다.")
+        render_recipe_card(
+            recipe_data=shared_recipe,
+            show_actions=False,
+            key_prefix=f"shared_{share_id}",
+        )
+
+    if st.button("🏠 메인으로 돌아가기"):
+        st.query_params.clear()
+        st.rerun()
+
+
 def main():
     """Main application entry point."""
     init_session_state()
+
+    share_id = _get_query_value("share_id")
+    if share_id:
+        render_shared_recipe_page(share_id)
+        return
 
     st.title("🍳 Fridge Chef")
     st.subheader("냉장고 재료로 만드는 맞춤 레시피")

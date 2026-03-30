@@ -381,7 +381,7 @@ fridge-chef/
 │   ├── image.py
 │   ├── parser.py
 │   ├── charts.py               # NEW: Chart utilities
-│   └── qrcode.py               # NEW: QR code generation
+│   └── session_recipes.py      # NEW: Guest session recipe helpers
 ├── components/
 │   ├── __init__.py
 │   ├── recipe_card.py          # NEW: Reusable recipe card
@@ -391,8 +391,10 @@ fridge-chef/
     ├── test_vision.py
     ├── test_recipe.py
     ├── test_auth.py            # NEW
+    ├── test_user.py            # NEW
     ├── test_recommendation.py  # NEW
-    └── test_sharing.py         # NEW
+    ├── test_sharing.py         # NEW
+    └── test_session_recipes.py # NEW
 ```
 
 ## Additional Dependencies
@@ -405,7 +407,6 @@ dependencies = [
     "bcrypt>=4.2.0",
     "plotly>=5.18.0",
     "qrcode[pil]>=7.4.0",
-    "streamlit-authenticator>=0.3.0",
 ]
 ```
 
@@ -420,7 +421,6 @@ dependencies = [
 ### NFR-2: Performance
 - Database queries optimized with indexes
 - Lazy loading for recipe lists
-- Cached dashboard statistics (5-minute TTL)
 - Efficient chart rendering
 
 ### NFR-3: Data Privacy
@@ -458,8 +458,8 @@ def generate_share_id() -> str:
 
 def create_share_link(share_id: str) -> str:
     """Create shareable URL."""
-    base_url = "https://fridge-chef.app"  # or localhost for POC
-    return f"{base_url}/r/{share_id}"
+    base_url = "https://fridge-chef.app"  # or APP_BASE_URL in local/dev
+    return f"{base_url}?share_id={share_id}"
 
 def generate_qr_code(url: str) -> BytesIO:
     """Generate QR code image for URL."""
@@ -498,6 +498,8 @@ def format_recipe_for_sharing(recipe: dict) -> str:
 | M3.6 | Dashboard | Statistics and charts |
 | M3.7 | Social sharing | Links, text, QR codes |
 | M3.8 | Integration testing | Full user journey tested |
+
+> **구현 참고 메모**: 현재 앱은 공유 링크를 `APP_BASE_URL?share_id=...` 형식으로 생성하며, 비로그인 사용자의 저장 레시피는 세션 상태에 임시 보관한 뒤 로그인 시 계정으로 이관합니다.
 
 ## Running the Complete Application
 

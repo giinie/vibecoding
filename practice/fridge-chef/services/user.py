@@ -1,7 +1,5 @@
 """User recipe management service."""
 import json
-from datetime import datetime
-
 from db.database import get_db
 from db.models import SavedRecipe, CookingHistory
 
@@ -44,6 +42,19 @@ class UserRecipeService:
             session.add(saved)
             session.commit()
             return saved.id
+
+    def has_recipe(self, recipe_data: dict) -> bool:
+        """Return whether the user already saved an equivalent recipe."""
+        candidate = self._recipe_signature(recipe_data)
+        with get_db() as session:
+            recipes = session.query(SavedRecipe.recipe_data).filter(
+                SavedRecipe.user_id == self.user_id
+            ).all()
+
+        return any(
+            self._recipe_signature(json.loads(recipe_json)) == candidate
+            for (recipe_json,) in recipes
+        )
 
     def get_saved_recipes(
         self,
@@ -223,3 +234,8 @@ class UserRecipeService:
                 CookingHistory.saved_recipe_id == recipe_id
             ).count()
             return count
+
+    @staticmethod
+    def _recipe_signature(recipe_data: dict) -> str:
+        """Create a stable comparison key for recipe content."""
+        return json.dumps(recipe_data, ensure_ascii=False, sort_keys=True)

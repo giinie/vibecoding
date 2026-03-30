@@ -28,7 +28,7 @@ AI-powered recipe recommendation service that recognizes ingredients from fridge
 | `utils/` | Utility modules: image processing, JSON parsing, chart helpers (see `utils/AGENTS.md`) |
 | `pages/` | Streamlit multi-page structure: 5 pages for the app flow (see `pages/AGENTS.md`) |
 | `models/` | Data transfer objects: Recipe dataclass (see `models/AGENTS.md`) |
-| `tests/` | Pytest test suite: 66 tests across 6 files (see `tests/AGENTS.md`) |
+| `tests/` | Pytest test suite: 79 tests across 7 files (see `tests/AGENTS.md`) |
 | `docs/` | Project documentation: work reports, collaboration proposals (see `docs/AGENTS.md`) |
 | `.claude/` | Claude Code agent configurations |
 
@@ -37,14 +37,15 @@ AI-powered recipe recommendation service that recognizes ingredients from fridge
 ### Working In This Directory
 - **Language**: UI text in Korean, code comments and docstrings in English
 - **Package manager**: `uv` (not pip). Always use `uv run` to execute commands
+- **Node/JavaScript tooling**: prefer `pnpm` when Node module work is needed
 - **Python version**: 3.14+ required (uses `list[str]` union syntax `str | None`)
 - **Entry point**: `uv run streamlit run app.py`
-- **Environment**: Requires `.env` file with `OPENROUTER_API_KEY`
+- **Environment**: Requires `.env` file with `OPENROUTER_API_KEY`; optional `APP_BASE_URL` controls share links
 - **DB init**: Database auto-initializes on app startup via singleton in `app.py`
 
 ### Testing Requirements
 - Run: `uv run pytest tests/ -v`
-- 66 tests across 6 test files, all should pass
+- 79 tests across 7 test files, all should pass
 - Tests use mocking extensively (no real API calls)
 - DB tests use in-memory SQLite fixtures
 
@@ -70,11 +71,12 @@ Services use Models (models/) for data transfer
 | `recognized_ingredients` | `list[str]` | Page 1 | Page 2 |
 | `uploaded_image` | `bytes` | Page 1 | Page 1 |
 | `generated_recipes` | `list[Recipe]` | Page 2 | Page 2, 4 |
-| `saved_recipes` | `list` | Page 4 | Page 4 |
+| `saved_recipes` | `list[dict]` | Page 2 (guest save), Page 3 (login import) | Page 2, 3, 4 |
 | `user_id` | `int` | Page 3 | Pages 3, 4, 5 |
 | `is_authenticated` | `bool` | Page 3 | All pages |
 | `username` | `str \| None` | Page 3 | Pages 3, 4, 5 |
 | `share_recipe_id` | `int \| None` | Page 4 | Page 4 |
+| `post_login_notice` | `str \| None` | Page 3 | Page 3 |
 
 ## Dependencies
 

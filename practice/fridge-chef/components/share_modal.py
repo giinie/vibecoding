@@ -8,6 +8,7 @@ from services.sharing import SharingService
 def render_share_modal(
     recipe_data: dict,
     saved_recipe_id: int | None = None,
+    user_id: int | None = None,
     key_prefix: str = "",
 ) -> None:
     """Render share modal dialog.
@@ -15,17 +16,20 @@ def render_share_modal(
     Args:
         recipe_data: Recipe data dict.
         saved_recipe_id: Optional saved recipe ID for persistent sharing.
+        user_id: Optional current user ID for authorization checks.
         key_prefix: Unique key prefix.
     """
     with st.expander("📤 레시피 공유하기", expanded=True):
         # Generate share link if saved
         share_url = None
         if saved_recipe_id:
-            share_id = SharingService.enable_sharing(saved_recipe_id)
+            share_id = SharingService.enable_sharing(saved_recipe_id, user_id=user_id)
             if share_id:
                 share_url = SharingService.create_share_link(share_id)
                 st.markdown("**🔗 공유 링크**")
                 st.code(share_url)
+            else:
+                st.error("공유 가능한 레시피를 찾을 수 없습니다.")
 
         st.divider()
 

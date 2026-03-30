@@ -10,6 +10,26 @@ class AuthService:
     """Authentication service for user registration and login."""
 
     COST_FACTOR = 12
+    MIN_USERNAME_LENGTH = 4
+    MIN_PASSWORD_LENGTH = 4
+
+    @staticmethod
+    def _normalize_username(username: str) -> str:
+        """Normalize username input for validation and storage."""
+        return username.strip()
+
+    @staticmethod
+    def is_valid_username(username: str) -> bool:
+        """Return whether the username satisfies service-level rules."""
+        normalized = AuthService._normalize_username(username)
+        if len(normalized) < AuthService.MIN_USERNAME_LENGTH:
+            return False
+        return normalized.replace("_", "").isalnum()
+
+    @staticmethod
+    def is_valid_password(password: str) -> bool:
+        """Return whether the password satisfies service-level rules."""
+        return len(password) >= AuthService.MIN_PASSWORD_LENGTH
 
     @staticmethod
     def hash_password(password: str) -> str:
@@ -41,6 +61,14 @@ class AuthService:
         Returns:
             Created User object or None if registration fails.
         """
+        username = AuthService._normalize_username(username)
+        nickname = nickname.strip() if nickname else None
+
+        if not AuthService.is_valid_username(username):
+            return None
+        if not AuthService.is_valid_password(password):
+            return None
+
         with get_db() as session:
             # Check if username exists
             existing = session.query(User).filter(User.username == username).first()

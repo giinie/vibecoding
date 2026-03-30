@@ -10,10 +10,11 @@ class Config:
 
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1/chat/completions"
+    APP_BASE_URL: str = os.getenv("APP_BASE_URL", "http://localhost:8501")
 
     # AI Models
     VISION_MODEL: str = "nvidia/nemotron-nano-12b-v2-vl:free"
-    RECIPE_MODEL: str = "nex-agi/deepseek-v3.1-nex-n1:free"
+    RECIPE_MODEL: str = "nex-agi/deepseek-v3.1-nex-n1"
 
     # Image settings
     MAX_IMAGE_SIZE_MB: int = 10

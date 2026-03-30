@@ -6,20 +6,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from db.init_db import init_database
-from db.database import engine
-from db.models import Base
 from services.auth import AuthService
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Set up and tear down test database."""
-    # Create tables
-    Base.metadata.create_all(bind=engine)
-    yield
-    # Drop tables after test
-    Base.metadata.drop_all(bind=engine)
 
 
 class TestAuthService:
@@ -67,6 +54,32 @@ class TestAuthService:
         result = AuthService.register("testuser", "password456", "User2")
 
         assert result is None
+
+    def test_register_rejects_short_username(self):
+        """Test registration rejects usernames shorter than the service rule."""
+        user = AuthService.register("abc", "password123", "Short Name")
+
+        assert user is None
+
+    def test_register_rejects_invalid_username_characters(self):
+        """Test registration rejects usernames with unsupported characters."""
+        user = AuthService.register("bad name!", "password123", "Bad Name")
+
+        assert user is None
+
+    def test_register_rejects_short_password(self):
+        """Test registration rejects passwords shorter than the service rule."""
+        user = AuthService.register("valid_user", "123", "Weak Password")
+
+        assert user is None
+
+    def test_register_strips_username_and_nickname(self):
+        """Test registration normalizes surrounding whitespace."""
+        user = AuthService.register("  trim_user  ", "password123", "  Trim Nick  ")
+
+        assert user is not None
+        assert user.username == "trim_user"
+        assert user.nickname == "Trim Nick"
 
     def test_login_success(self):
         """Test successful login."""

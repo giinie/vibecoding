@@ -16,6 +16,8 @@ Fridge Chef 프로젝트의 Step 2 "AI 레시피 생성" 기능 구현
 - 레시피 카드 UI 컴포넌트
 - Step 1과의 세션 상태 연동
 
+> **후속 구현 메모**: 현재 구현에서는 비로그인 사용자가 저장한 레시피를 `st.session_state.saved_recipes`에 `list[dict]` 형태로 임시 저장하고, 로그인 시 계정으로 이관합니다.
+
 ---
 
 ## 2. 사용된 도구 (Tools)
@@ -52,7 +54,7 @@ Fridge Chef 프로젝트의 Step 2 "AI 레시피 생성" 기능 구현
 class RecipeService:
     """OpenRouter API를 통한 레시피 생성 서비스"""
 
-    MODEL = "nex-agi/deepseek-v3.1-nex-n1:free"
+    MODEL = "nex-agi/deepseek-v3.1-nex-n1"
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
     def generate_recipes(
@@ -161,7 +163,7 @@ def render_recipe_card(recipe: dict, key_prefix: str = "") -> None:
 ## 4. 기술적 결정 사항
 
 ### 4.1 Text 모델 선택
-- **선택**: `nex-agi/deepseek-v3.1-nex-n1:free`
+- **선택**: `nex-agi/deepseek-v3.1-nex-n1`
 - **이유**: 무료 API, 한국어 레시피 생성 품질 우수, JSON 출력 안정적
 
 ### 4.2 JSON 출력 보장
@@ -208,7 +210,7 @@ def categorize_ingredients(recipe_ingredients: list, available: list) -> dict:
 **Request**:
 ```json
 {
-  "model": "nex-agi/deepseek-v3.1-nex-n1:free",
+  "model": "nex-agi/deepseek-v3.1-nex-n1",
   "messages": [
     {"role": "system", "content": "시스템 프롬프트"},
     {"role": "user", "content": "재료: 당근, 양파, 대파\n설정: 난이도 쉬움, 30분 이내"}

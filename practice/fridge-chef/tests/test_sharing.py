@@ -6,20 +6,10 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from db.init_db import init_database
-from db.database import engine
-from db.models import Base
 from services.auth import AuthService
+from services.config import Config
 from services.user import UserRecipeService
 from services.sharing import SharingService
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Set up and tear down test database."""
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -65,8 +55,16 @@ class TestSharingService:
         share_id = "abc123"
         link = SharingService.create_share_link(share_id)
 
-        assert "abc123" in link
+        assert "share_id=abc123" in link
         assert link.startswith("http")
+
+    def test_create_share_link_uses_configured_base_url(self, monkeypatch):
+        """Test share link creation respects the configured base URL."""
+        monkeypatch.setattr(Config, "APP_BASE_URL", "https://fridge-chef.app/")
+
+        link = SharingService.create_share_link("abc123")
+
+        assert link == "https://fridge-chef.app?share_id=abc123"
 
     def test_generate_qr_code(self):
         """Test QR code generation."""
@@ -96,7 +94,7 @@ class TestSharingService:
         user_service = UserRecipeService(test_user.id)
         recipe_id = user_service.save_recipe(sample_recipe)
 
-        share_id = SharingService.enable_sharing(recipe_id)
+        share_id = SharingService.enable_sharing(recipe_id, user_id=test_user.id)
 
         assert share_id is not None
         assert len(share_id) >= 8
@@ -106,8 +104,8 @@ class TestSharingService:
         user_service = UserRecipeService(test_user.id)
         recipe_id = user_service.save_recipe(sample_recipe)
 
-        share_id1 = SharingService.enable_sharing(recipe_id)
-        share_id2 = SharingService.enable_sharing(recipe_id)
+        share_id1 = SharingService.enable_sharing(recipe_id, user_id=test_user.id)
+        share_id2 = SharingService.enable_sharing(recipe_id, user_id=test_user.id)
 
         assert share_id1 == share_id2
 
@@ -115,7 +113,7 @@ class TestSharingService:
         """Test getting a shared recipe."""
         user_service = UserRecipeService(test_user.id)
         recipe_id = user_service.save_recipe(sample_recipe)
-        share_id = SharingService.enable_sharing(recipe_id)
+        share_id = SharingService.enable_sharing(recipe_id, user_id=test_user.id)
 
         shared_recipe = SharingService.get_shared_recipe(share_id)
 
@@ -132,13 +130,13 @@ class TestSharingService:
         """Test disabling sharing."""
         user_service = UserRecipeService(test_user.id)
         recipe_id = user_service.save_recipe(sample_recipe)
-        share_id = SharingService.enable_sharing(recipe_id)
+        share_id = SharingService.enable_sharing(recipe_id, user_id=test_user.id)
 
         # Verify sharing works
         assert SharingService.get_shared_recipe(share_id) is not None
 
         # Disable sharing
-        result = SharingService.disable_sharing(recipe_id)
+        result = SharingService.disable_sharing(recipe_id, user_id=test_user.id)
         assert result is True
 
         # Verify sharing no longer works
@@ -146,6 +144,27 @@ class TestSharingService:
 
     def test_enable_sharing_nonexistent_recipe(self):
         """Test enabling sharing for non-existent recipe."""
-        share_id = SharingService.enable_sharing(99999)
+        share_id = SharingService.enable_sharing(99999, user_id=1)
 
         assert share_id is None
+
+    def test_enable_sharing_rejects_other_users_recipe(self, test_user, sample_recipe):
+        """Test enabling sharing fails when the recipe belongs to another user."""
+        owner_service = UserRecipeService(test_user.id)
+        recipe_id = owner_service.save_recipe(sample_recipe)
+        other_user = AuthService.register("otheruser", "password123", "Other User")
+
+        share_id = SharingService.enable_sharing(recipe_id, user_id=other_user.id)
+
+        assert share_id is None
+
+    def test_disable_sharing_rejects_other_users_recipe(self, test_user, sample_recipe):
+        """Test disabling sharing fails when the recipe belongs to another user."""
+        owner_service = UserRecipeService(test_user.id)
+        recipe_id = owner_service.save_recipe(sample_recipe)
+        share_id = SharingService.enable_sharing(recipe_id, user_id=test_user.id)
+        other_user = AuthService.register("otheruser2", "password123", "Other User 2")
+
+        assert share_id is not None
+        assert SharingService.disable_sharing(recipe_id, user_id=other_user.id) is False
+        assert SharingService.get_shared_recipe(share_id) is not None

@@ -19,6 +19,12 @@
 - **Web Framework**: Streamlit
 - **Database**: SQLite + SQLAlchemy 2.0
 - **AI API**: OpenRouter (Vision + Text 모델)
+- **실행 규칙**: Python 명령은 항상 `uv`, Node/JavaScript 작업은 `pnpm` 우선
+
+### 현재 동작 메모
+- 비로그인 사용자는 생성한 레시피를 **브라우저 세션에 임시 저장**할 수 있습니다.
+- 로그인하면 임시 저장한 레시피를 **계정에 영구 저장**합니다.
+- 공유 링크는 `APP_BASE_URL`을 기준으로 `?share_id=...` 형식으로 생성됩니다.
 
 ## 빠른 시작
 
@@ -39,6 +45,7 @@ uv sync
 
 ```env
 OPENROUTER_API_KEY=your_api_key_here
+APP_BASE_URL=http://localhost:8501
 ```
 
 > OpenRouter API 키는 [openrouter.ai](https://openrouter.ai/)에서 발급받을 수 있습니다.
@@ -139,7 +146,7 @@ Streamlit 세션 상태에서 사용되는 주요 키:
 | `recognized_ingredients` | `list[str]` | 인식된 재료 목록 |
 | `uploaded_image` | `bytes` | 업로드된 이미지 |
 | `generated_recipes` | `list[Recipe]` | 생성된 레시피 |
-| `saved_recipes` | `list` | 저장된 레시피 |
+| `saved_recipes` | `list[dict]` | 비로그인 임시 저장 레시피 |
 | `user_id` | `int` | 로그인된 사용자 ID |
 | `is_authenticated` | `bool` | 로그인 상태 |
 | `username` | `str \| None` | 로그인된 사용자 이름 |
@@ -163,7 +170,7 @@ OpenRouter 무료 모델 사용:
 | 용도 | 모델 |
 |------|------|
 | 이미지 인식 | `nvidia/nemotron-nano-12b-v2-vl:free` |
-| 레시피 생성 | `nex-agi/deepseek-v3.1-nex-n1:free` |
+| 레시피 생성 | `nex-agi/deepseek-v3.1-nex-n1` |
 
 ## 문제 해결
 
@@ -214,4 +221,4 @@ This project is licensed under the MIT License.
 ---
 
 **개발 현황**: Step 1, 2, 3 완료 (POC 단계)
-**테스트 커버리지**: 66 tests passing
+**테스트 커버리지**: 79 tests passing

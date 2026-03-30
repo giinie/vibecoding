@@ -13,6 +13,7 @@ Project documentation: step-by-step work reports (Korean) and collaboration prop
 | `WORK_REPORT_STEP1.md` | Step 1 implementation report: ingredient recognition feature, architecture decisions, test results |
 | `WORK_REPORT_STEP2.md` | Step 2 implementation report: recipe generation feature, API integration, filtering logic |
 | `WORK_REPORT_STEP3.md` | Step 3 implementation report: user profiles, saved recipes, dashboard, sharing features |
+| `MANUAL_QA_CHECKLIST.md` | User-facing manual QA checklist covering guest save, login migration, sharing, and dashboard flows |
 | `NOTION_협업_개선_제안.md` | Collaboration improvement proposal for Notion-based team workflows (Korean) |
 
 ## For AI Agents
