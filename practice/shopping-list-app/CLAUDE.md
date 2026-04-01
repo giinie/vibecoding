@@ -212,7 +212,7 @@ Shopping Items (`/api/shopping-items`, JWT required, rate-limited 100 req/15min)
 ### Documentation (`docs/`)
 
 - `ai-skills-usage-guide.md` — AI skills (ai-delegate, ai-review 등) 사용 가이드
-- `security-recommendations.md` — Security audit findings and remediation plan (all items resolved)
+- `security-recommendations.md` — Security audit findings and remediation plan (most items resolved; N-4 token revocation partially resolved — see security-cross-verification-2026-03-07.md)
 - `security-audit-followup-report.md` — Post-audit verification results
 - `collaborator-review.md` — Collaborator code review notes
 - `slop-cleanup-report.md` — AI slop cleanup scan results

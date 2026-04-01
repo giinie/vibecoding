@@ -13,6 +13,7 @@ dependencies = [
     "bcrypt>=4.2.0",
     "plotly>=5.18.0",
     "qrcode[pil]>=7.4.0",
+    "ruff>=0.15.8",
 ]
 
 [dependency-groups]
