@@ -13,6 +13,7 @@
 | 특정 프로바이더에 직접 위임 | `/ai-delegate codex\|gemini\|amp` |
 
 모든 스킬은 Claude Code Agent Team으로 실행되며, 외부 CLI 실패 시 Claude가 직접 분석합니다 (최소 출력 보장).
+codex 호출은 `/codex` 플러그인으로 자동 라우팅됩니다 (2026-04-01~, 구조화 JSON 출력 + 스레드 지속성).
 
 ---
 
@@ -99,6 +100,25 @@ Claude Code Agent Team 실행 모델은 2026-03-11 iteration-3에서 검증되�
 
 보고서에 다음이 명시됩니다:
 `[NOTE] External providers unavailable — Claude-only analysis.`
+
+---
+
+## Codex Plugin Integration (2026-04-01)
+
+codex 프로바이더 선택 시, raw CLI 대신 `/codex` 플러그인 명령어를 통해 실행됩니다.
+`codex --help` 인터페이스 발견 단계(~3초)가 생략되고, App-Server 프로토콜,
+GPT-5.4 프롬프트 최적화, 구조화 JSON 출력, 스레드 지속성이 자동 적용됩니다.
+
+| 작업 유형 | /codex 명령어 | 주요 플래그 |
+|----------|-------------|-----------|
+| 코드 리뷰 | `/codex:review` | `--wait --scope auto` |
+| 적대적 리뷰 | `/codex:adversarial-review` | `--wait --scope auto` |
+| 일반 작업/분석 | `/codex:rescue` | `--wait --fresh` |
+| 파일 수정 작업 | `/codex:rescue` | `--wait --fresh --write` |
+| 이전 스레드 이어가기 | `/codex:rescue` | `--wait --resume` |
+
+**gemini/amp 경로는 기존 Adaptive Execution Protocol (Phase 1-4) 유지.**
+teammate 컨텍스트에서 Skill tool 접근 가능 검증 완료 (2026-04-01).
 
 ---
 
@@ -273,7 +293,8 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 /ai-review "최근 변경사항 전체 리뷰"
 ```
 
-**실행 전략**: Claude + codex + gemini 3개 병렬 리뷰 후 비교 보고서 생성
+**실행 전략**: Claude + codex (`/codex:review` 플러그인) + gemini 3개 병렬 리뷰 후 비교 보고서 생성
+codex-worker는 구조화 JSON 출력(verdict, findings[], severity, file, line, confidence)을 반환합니다.
 
 **결과 형식** -- 3자 비교 테이블:
 
@@ -320,13 +341,14 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 Full autonomy 플래그는 **반드시 사용자 확인** 후 사용됩니다.
 
-### 폴백 체인 (기본)
+### 폴백 체인
 
 ```text
-codex -> gemini -> amp -> Claude fallback
+codex (/codex plugin) -> codex (raw CLI fallback) -> gemini -> amp -> Claude fallback
 ```
 
 가장 안전한(샌드박스) 프로바이더부터 시도하고, 최종적으로 Claude가 직접 처리합니다.
+codex 플러그인 실패 시 raw CLI를 한 번 시도한 후 gemini로 넘어갑니다.
 
 ### 타임아웃
 
@@ -354,7 +376,10 @@ ai-delegate SKILL.md의 Effort Levels에 대응합니다:
 ## 아키텍처
 
 ```text
-ai-delegate (허브: 역할 계층, Team 실행 모델, CLI 문법, 보안 규칙, 폴백 체인)
+ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 체인)
+  |
+  +-- /codex plugin ── codex 호출 시 자동 라우팅 (review, rescue)
+  |     (gemini/amp은 기존 adaptive protocol 유지)
   |
   +-- ai-research  (원격 검색: gemini 기본, amp Librarian 에스컬레이션)
   +-- ai-parallel  (배치 처리: 1 Team + 2 teammates 병렬 분담)
@@ -380,5 +405,13 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, CLI 문법, 보안 규�
 | 2026-03-12 | SKILL.md 동기화 Test A: 단일 codex | PASS | stdin redirect `<` 정상, Team lifecycle 정상 |
 | 2026-03-12 | SKILL.md 동기화 Test B: 병렬 리뷰 | PASS | 1 Team + 2 teammates (codex + gemini) 병렬 성공 |
 | 2026-03-12 | SKILL.md 동기화 Test C: MOG fallback | PASS | CLI 미설치 시 Claude 직접 분석 + `[NOTE]` 메시지 |
+
+### Codex Plugin Integration 검증 (2026-04-01)
+
+| 날짜 | 테스트 | 결과 | 비고 |
+|------|--------|------|------|
+| 2026-04-01 | Teammate Skill tool 접근 | PASS | teammate에서 Skill("/codex:setup") 성공 |
+| 2026-04-01 | ai-delegate codex via /codex plugin | PASS | Skill("/codex:rescue --wait --fresh") 경로로 보안 분석 완료 |
+| 2026-04-01 | ai-review 병렬 교차 검증 | PASS | codex-worker(/codex:review) + gemini-worker(adaptive) 병렬 성공, 9개 이슈 탐지 |
 
 상세 결과: `ai-delegate-workspace/` 디렉토리 참조 (`.gitignore` 대상, 로컬에서만 확인 가능)

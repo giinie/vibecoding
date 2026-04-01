@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+### 2026-04-01
+
+#### Changed
+- `CLAUDE.md`: `security-recommendations.md` 설명을 N-4 토큰 갱신 항목 PARTIALLY RESOLVED 상태 반영으로 업데이트 (commit 5e8c106)
+- `docs/ai-skills-usage-guide.md`: Codex Plugin Integration 반영 — codex 호출 경로가 `/codex` 플러그인 명령어로 통합됨
+
 ### 2026-03-25
 
 #### Refactored
