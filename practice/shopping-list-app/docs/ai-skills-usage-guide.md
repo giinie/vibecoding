@@ -327,6 +327,14 @@ codex-worker는 구조화 JSON 출력(verdict, findings[], severity, file, line,
 | Level 2 | codex / gemini | Claude 1차 시도 실패 후 |
 | Level 3 | amp (deep) | Level 2 미해결, Librarian 필요 |
 
+**기본 프로바이더 선택 가이드** (사용자가 지정하지 않은 경우):
+| 작업 유형 | 기본 프로바이더 | 이유 |
+|----------|--------------|------|
+| 성능/프로파일링 | gemini | 대규모 컨텍스트로 트레이스 분석 |
+| 버그 근본 원인 (스택 트레이스) | codex | 구조화된 출력 |
+| 아키텍처/설계 | amp | 확장 추론 |
+| 일반 멀티파일 분석 | codex | 샌드박스, 안전한 기본값 |
+
 ---
 
 ## 공통 규칙
@@ -340,6 +348,15 @@ codex-worker는 구조화 JSON 출력(verdict, findings[], severity, file, line,
 | Full autonomy | 파일 수정 + 명령 실행 | ai-deep (Level 3) |
 
 Full autonomy 플래그는 **반드시 사용자 확인** 후 사용됩니다.
+단, 사용자가 프로바이더를 명시한 명령의 경우(예: `/ai-delegate codex review X`) 확인을 생략할 수 있습니다.
+
+### CLI Exclusivity Rule
+
+ai-* 스킬은 **외부 모델의 교차 관점**을 얻기 위해 존재합니다. 따라서 외부 CLI 호출을 내장 MCP 도구(exa, tavily, WebSearch 등)로 대체해서는 안 됩니다.
+
+- **금지**: `mcp__exa__web_search_exa`, `mcp__tavily__tavily_search`, WebSearch/WebFetch 등으로 대체
+- **예외**: context7 MCP는 공식 문서 조회(ai-research Step 1)에만 허용
+- Team 생성 실패 시 MCP로 조용히 대체하지 말고 한계를 명확히 보고
 
 ### 폴백 체인
 
@@ -352,13 +369,13 @@ codex 플러그인 실패 시 raw CLI를 한 번 시도한 후 gemini로 넘어�
 
 ### 타임아웃
 
-ai-delegate SKILL.md의 Effort Levels에 대응합니다:
+conventions.md의 Effort Levels(공통 규약)에 대응합니다:
 
 | Effort Level | 작업 유형 | 시간 |
 |-------------|----------|------|
 | low | Quick/rush | 120초 |
 | medium | 표준 (research, delegate) | 180초 |
-| high | 코드 리뷰, 아키텍처 분석 | 300~600초 |
+| high | 코드 리뷰, 아키텍처 분석 | 600초 |
 | max | 심층 분석, 병렬 처리 | 900초 |
 
 ### 에러 대응
@@ -391,6 +408,9 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 �
 
 ---
 
+<details>
+<summary>검증 이력 (iteration-3, 2026-03-11~12 / Codex Plugin 2026-04-01)</summary>
+
 ## 검증 이력 (iteration-3, 2026-03-11~12)
 
 이 가이드의 실행 모델은 iteration-3 E2E 테스트에서 검증되었습니다.
@@ -415,3 +435,5 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 �
 | 2026-04-01 | ai-review 병렬 교차 검증 | PASS | codex-worker(/codex:review) + gemini-worker(adaptive) 병렬 성공, 9개 이슈 탐지 |
 
 상세 결과: `ai-delegate-workspace/` 디렉토리 참조 (`.gitignore` 대상, 로컬에서만 확인 가능)
+
+</details>

@@ -5,6 +5,19 @@
 
 ## [Unreleased]
 
+### 2026-04-02
+
+#### Changed
+- **ai-* 스킬 Enhancement Pass 2**: 3-enhancer 병렬 분석 → 32건 통합, 전체 적용
+  - `references/security.md`: 정규식 버그 수정 (`\|` → `|`), Regex Flavor 섹션 추가 (JS/PCRE 명시)
+  - `references/conventions.md`: 6개 신규 섹션 (Execution Context, CLI Exclusivity Rule, multi-teammate cleanup, user confirmation MUST, STATE_DIR 정의, effort level 참조 정책) + 4개 기존 섹션 업데이트
+  - `ai-delegate/SKILL.md`: 워크플로 재구조화, preamble 결정 테이블, `{task_text}` → `{task_description}` 통일, retry 정책 통일, research → ai-research 라우팅
+  - `ai-review/SKILL.md`: timeout 300s → 600s (conventions.md high 기준), Pre-execution Safety Check 추가, 보일러플레이트 → conventions.md 참조
+  - `ai-deep/SKILL.md`: provider 선택 heuristics 추가, 보일러플레이트 → conventions.md 참조
+  - `ai-parallel/SKILL.md`: 파일 분할 전략 추가 (디렉토리 그룹 우선), 보일러플레이트 → conventions.md 참조
+  - `ai-research/SKILL.md`: Pre-execution Safety Check 추가, fallback chain 역순 근거 문서화, MCP fallback 모호성 수정
+- `docs/ai-skills-usage-guide.md`: CLI Exclusivity Rule, ai-deep provider heuristics, effort level 참조 소스 업데이트
+
 ### 2026-04-01
 
 #### Changed

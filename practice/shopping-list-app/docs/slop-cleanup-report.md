@@ -114,7 +114,7 @@
   - [x] `migrate.js`: console.log를 require.main 가드 이동
   - [ ] `ErrorBoundary.js`: console.error 제거 (미적용)
   - [ ] `notification.websocket.test.js`: expect(true).toBe(true) 제거 (미적용)
-- [ ] `npm test` 실행하여 테스트 통과 확인
+- [x] `npm test` 실행하여 테스트 통과 확인 (69/69 tests passing, 2026-03-07 이후 지속 확인)
 - [ ] MEDIUM 항목 중 라우트 주석(#4) 팀 합의 후 결정
 - [x] MEDIUM 항목 중 UUID_REGEX 중복(#5) 리팩토링 — `validateUuid.js`에서 export, controller에서 import (2026-03-04)
 - [ ] LOW 항목은 선택적 정리 (유지 권장)

@@ -1,6 +1,7 @@
-# 보안 강화 권장사항 (Archived — 모든 항목 구현 완료)
+# 보안 강화 권장사항
 
-> **상태**: 모든 항목 구현 완료 (2026-02-16 ~ 2026-02-23 완료). 결정 기록 용도로 보존.
+> **상태**: Archived — 모든 항목 구현 완료 (2026-02-16 ~ 2026-02-23). 결정 기록 용도로 보존.
+> 아래 코드 예시는 구현 제안 당시의 스냅샷이며, 실제 구현은 소스 코드를 참조하세요.
 > **작성일**: 2026-02-16
 > **작성 배경**: Fullstack Code Review에서 도출된 프로덕션 배포 전 필수 개선 항목
 
@@ -28,33 +29,21 @@
 
 ## 권장사항 #5: REST API 인증 체계 강화 (JWT 도입)
 
-> **현재 코드**: 아래 예시가 실제 구현에 반영되어 있습니다.
+> **구현 완료**. 실제 코드: `server/middleware/auth.js`, `server/routes/auth.js`, `client/src/services/authApi.js`
 
-### 문제점
+- **문제**: `x-user-id` 헤더 기반 인증 — 누구나 다른 사용자로 위장 가능
+- **해결**: JWT HS256 인증 도입 (access token 15m + refresh token 7d rotation)
+- **영향 범위**: auth.js, notifications.js, notificationApi.js, socketService.js, 신규 authApi.js
+- **필요 패키지**: jsonwebtoken, bcryptjs (설치 완료)
 
-```bash
-# 현재: 누구나 헤더를 조작하여 다른 사용자로 위장 가능
-curl -H "x-user-id: user-2" http://localhost:3001/api/notifications/user-2
-```
+<details>
+<summary>구현 제안 당시 코드 예시 (참고용)</summary>
 
-`server/middleware/auth.js`의 `authenticate` 함수가 `x-user-id` 헤더의 **존재 여부만** 확인하고, 해당 값이 실제 인증된 사용자인지 검증하지 않습니다.
-
-### 영향 범위
-
-- `server/middleware/auth.js` — 인증 로직 전체 교체
-- `server/routes/notifications.js` — 미들웨어 연결 방식 변경 가능
-- `client/src/services/notificationApi.js` — 헤더를 `Authorization: Bearer <token>`으로 변경
-- `client/src/hooks/useNotifications.js` — 토큰 관리 연동
-- 새 파일: 로그인 API 엔드포인트, 토큰 발급/검증 유틸
-
-### 구현 방향
-
-#### 1단계: 서버 측 JWT 검증
+#### 서버 측 JWT 검증
 
 ```javascript
 // server/middleware/auth.js (변경 후 예시)
 const jwt = require('jsonwebtoken');
-
 const JWT_SECRET = process.env.JWT_SECRET;
 
 function authenticate(req, res, next) {
@@ -62,7 +51,6 @@ function authenticate(req, res, next) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Authentication required' });
   }
-
   try {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -74,28 +62,14 @@ function authenticate(req, res, next) {
 }
 ```
 
-#### 2단계: 로그인 엔드포인트 추가
-
-```javascript
-// server/routes/auth.js (새 파일)
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  // 1. DB에서 사용자 조회
-  // 2. 비밀번호 검증 (bcrypt)
-  // 3. JWT 토큰 발급
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
-  res.json({ token, user: { id: user.id, name: user.name } });
-});
-```
-
-#### 3단계: 클라이언트 측 토큰 관리
+#### 클라이언트 측 토큰 관리
 
 ```javascript
 // client/src/services/notificationApi.js (현재 구현)
 import { getToken, logout } from './authApi';
 
 function authHeaders(extra = {}) {
-  const token = getToken();  // authApi.js의 getToken()을 통해 접근
+  const token = getToken();
   return {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...extra,
@@ -103,47 +77,21 @@ function authHeaders(extra = {}) {
 }
 ```
 
-### 필요 패키지
-
-```bash
-npm install jsonwebtoken bcryptjs
-```
-
-### 고려사항
-
-- `JWT_SECRET`은 환경 변수로 관리 (`.env` 파일, 절대 코드에 하드코딩하지 않을 것)
-- 토큰 만료 시간 설정 (예: 7일) 및 리프레시 토큰 전략 검토
-- ~~`users` 테이블에 `password_hash` 컬럼 추가 필요~~ (완료)
-- 기존 `x-user-id` 기반 테스트 코드 전면 수정 필요
+</details>
 
 ---
 
 ## 권장사항 #6: WebSocket 인증 추가
 
-> **현재 코드**: 아래 예시가 실제 구현에 반영되어 있습니다.
+> **구현 완료**. 실제 코드: `server/websocket/socketAuthMiddleware.js`, `server/websocket/socketManager.js`, `client/src/services/socketService.js`
 
-### 문제점
+- **문제**: `query.userId`에 아무 값이나 넣으면 다른 사용자의 실시간 알림 수신 가능
+- **해결**: Socket.io `auth` 옵션으로 JWT 토큰 전달 + 서버 미들웨어에서 검증
+- **영향 범위**: socketManager.js, socketAuthMiddleware.js (신규), socketService.js
+- **추가 구현**: access token 만료 시 자동 재연결 + 토큰 갱신, `SOCKET_AUTH_ERRORS` 상수
 
-```javascript
-// server/websocket/socketManager.js (현재)
-io.use((socket, next) => {
-  const userId = socket.handshake.query.userId;
-  if (!userId) {
-    return next(new Error('Authentication required'));
-  }
-  next(); // userId가 아무 문자열이든 통과
-});
-```
-
-WebSocket은 REST API와 **별도의 프로토콜**이며, HTTP 미들웨어가 적용되지 않습니다. 현재는 `query.userId`에 아무 값이나 넣으면 해당 사용자의 room에 참여하여 **다른 사용자의 실시간 알림을 수신**할 수 있습니다.
-
-### 영향 범위
-
-- `server/websocket/socketManager.js` — 연결 시 토큰 검증 추가
-- `client/src/services/socketService.js` — 연결 시 토큰 전달
-- 테스트 파일: `tests/integration/notification.websocket.test.js`
-
-### 구현 방향
+<details>
+<summary>구현 제안 당시 코드 예시 (참고용)</summary>
 
 #### 서버: Socket.io 미들웨어에서 JWT 검증
 
@@ -153,10 +101,7 @@ const jwt = require('jsonwebtoken');
 
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
-  if (!token) {
-    return next(new Error('Authentication required'));
-  }
-
+  if (!token) return next(new Error('Authentication required'));
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     socket.userId = decoded.userId;
@@ -164,12 +109,6 @@ io.use((socket, next) => {
   } catch (err) {
     return next(new Error('Invalid or expired token'));
   }
-});
-
-io.on('connection', (socket) => {
-  // socket.userId는 미들웨어에서 검증 완료
-  const room = `user:${socket.userId}`;
-  socket.join(room);
 });
 ```
 
@@ -187,11 +126,7 @@ export function connect(token) {
 }
 ```
 
-### 고려사항
-
-- Socket.io의 `auth` 옵션은 `query`보다 안전 (URL에 노출되지 않음)
-- 토큰 만료 시 WebSocket 재연결 실패 → 클라이언트에서 토큰 갱신 후 재연결 로직 필요
-- `reconnection` 이벤트에서 최신 토큰을 다시 전달하도록 처리
+</details>
 
 ---
 

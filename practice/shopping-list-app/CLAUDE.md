@@ -13,21 +13,26 @@ Shopping list app with a real-time notification system and JWT authentication. M
 
 ## Critical Rules
 
+**Auth & Security**
 - **MUST** set `JWT_SECRET` in `.env` before starting the server — it exits immediately without it. Tests set `process.env.JWT_SECRET = 'test-jwt-secret-key'` in `setupTestDatabase()`.
-- **MUST** call `setupTestDatabase()` before `createTestServer()` in tests — order matters because tests monkey-patch `server/db/connection.js` via module cache. Reversing the order breaks test isolation.
-- **MUST** use UUID v4 format for any `userId` route parameter in tests. The default `test-user-1` string will be rejected by `validateUuid` middleware. Use `crypto.randomUUID()` or a fixed UUID like `'550e8400-e29b-41d4-a716-446655440000'`. **Note**: `seedTestUser()` defaults to `'test-user-1'` — always pass an explicit UUID: `seedTestUser('550e8400-e29b-41d4-a716-446655440000')`.
-- **MUST** transform boolean columns at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`) and `Boolean(item.is_purchased)` (see `transformItem` in `shoppingItemApi.js`).
 - **MUST** use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls — it transparently retries with a refreshed access token on 401, then throws if refresh fails (which also calls `logout()`). Both `notificationApi.js` and `shoppingItemApi.js` have been migrated to `fetchWithAuth()`.
-- **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
-- **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
 - **MUST NOT** log secrets or passwords outside `NODE_ENV === 'development'`. `seed.js` guards password output with this check. Any new seed/debug scripts must follow the same pattern.
 - **MUST** pass `corsOrigin` explicitly to `initializeSocket()`. The function warns if no origin is provided, but falls back to `localhost:3000` for development convenience. Always set `CORS_ORIGIN` in production.
+
+**Testing**
+- **MUST** call `setupTestDatabase()` before `createTestServer()` in tests — order matters because tests monkey-patch `server/db/connection.js` via module cache. Reversing the order breaks test isolation.
+- **MUST** use UUID v4 format for any `userId` route parameter in tests. The default `test-user-1` string will be rejected by `validateUuid` middleware. Use `crypto.randomUUID()` or a fixed UUID like `'550e8400-e29b-41d4-a716-446655440000'`. **Note**: `seedTestUser()` defaults to `'test-user-1'` — always pass an explicit UUID: `seedTestUser('550e8400-e29b-41d4-a716-446655440000')`.
+
+**API & Data**
+- **MUST** transform boolean columns at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`) and `Boolean(item.is_purchased)` (see `transformItem` in `shoppingItemApi.js`).
+- **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+- **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
 
 ## First-time Setup
 
 ```bash
 cp .env.example .env          # Fill in JWT_SECRET (required)
-npm install && cd client && npm install && cd ..
+npm install && npm --prefix client install
 npm run migrate                # Auto-runs on server start too
 npm run seed                   # Optional: insert sample data
 npm run dev                    # Starts both server (3001) and client (3000)
@@ -59,7 +64,7 @@ npm run seed                   # Seed sample data
 
 ### Auth & Refresh Token System
 
-- **JWT auth flow**: `authenticate` extracts `Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`. Token signing uses `signAccessToken()` in `auth.js`. Access tokens default to `15m`; refresh tokens (opaque strings via `refreshTokenModel.create()`) to `7d`.
+- **JWT auth flow**: `authenticate` extracts `Bearer <token>`, verifies with HS256, sets `req.userId`. `authorizeUser` checks `req.params.userId === req.userId`. Token signing uses `signAccessToken()` in `auth.js`. TTLs: see TL;DR.
 - **Refresh token rotation**: `POST /api/auth/refresh` consumes the current refresh token, issues a new access + refresh pair in the same family. Replay detection: if a used token is replayed, the entire family is revoked. Max 5 concurrent families per user (oldest evicted).
 - **Logout flow**: `POST /api/auth/logout` accepts `{ refreshToken }` and deletes the entire token family server-side. Client `logout()` in `authApi.js` clears both `TOKEN_KEY` and `REFRESH_TOKEN_KEY` from `localStorage` and fires the server call fire-and-forget.
 - **Token access**: All client modules MUST use `getToken()` from `authApi.js` to read the JWT access token and `REFRESH_TOKEN_KEY` for the refresh token. Never access `localStorage` directly for tokens.
@@ -68,14 +73,13 @@ npm run seed                   # Seed sample data
 
 ### Client API Utilities
 
-- **`fetchWithAuth()` vs `handleErrorResponse()`**: Both live in `apiUtils.js`. Use `fetchWithAuth()` for all authenticated API calls — it wraps `fetch()` with automatic token refresh on 401 and one retry. If refresh fails, throws `'Auth required'` (Korean: `'인증이 필요합니다.'`); `refreshAccessToken()` already calls `logout()` internally — do not call it again. `handleErrorResponse()` is a safety net for non-`fetchWithAuth` paths and also calls `logout()` on 401. **Prefer `fetchWithAuth()` for new code.**
-- **Shared API utilities**: `BASE_URL`, `authHeaders()`, `handleErrorResponse()`, and `fetchWithAuth()` live in `apiUtils.js`. All API service modules (`notificationApi.js`, `shoppingItemApi.js`) import from here. Never duplicate these across service files.
-- **Auto-logout on 401**: `fetchWithAuth()` triggers `logout()` (via `refreshAccessToken()` failure path) on unrecoverable 401. `handleErrorResponse()` also calls `logout()` on 401 as a fallback.
+- **`fetchWithAuth()`**: Wraps `fetch()` with 401 retry via token refresh. On unrecoverable failure, throws `'인증이 필요합니다.'` — `refreshAccessToken()` already calls `logout()` internally, do not call it again. `handleErrorResponse()` is a legacy fallback for non-`fetchWithAuth` paths. **Prefer `fetchWithAuth()` for new code.**
+- **Shared API utilities**: `BASE_URL`, `authHeaders()`, `handleErrorResponse()`, and `fetchWithAuth()` live in `apiUtils.js`. All API service modules (`notificationApi.js`, `shoppingItemApi.js`) import from here. Use `getToken()` from `authApi.js` for token access — never read `localStorage` directly.
 
 ### Testing
 
 - **Module cache clearing in tests**: `teardownTestDatabase()` deletes `require.cache` entries for all server modules. WHY: ensures fresh state between test suites when DB connection is replaced.
-- **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT. Always seed user before creating token. **Caution**: `seedTestUser()` defaults to non-UUID `'test-user-1'` — always pass an explicit UUID.
+- **Test auth helpers**: `seedTestUser(userId)` inserts user with pre-hashed password. `getTestToken(userId)` creates JWT. Always seed user before creating token. See Critical Rules for UUID requirement.
 
 ### UI State
 
@@ -211,12 +215,4 @@ Shopping Items (`/api/shopping-items`, JWT required, rate-limited 100 req/15min)
 
 ### Documentation (`docs/`)
 
-- `ai-skills-usage-guide.md` — AI skills (ai-delegate, ai-review 등) 사용 가이드
-- `security-recommendations.md` — Security audit findings and remediation plan (most items resolved; N-4 token revocation partially resolved — see security-cross-verification-2026-03-07.md)
-- `security-audit-followup-report.md` — Post-audit verification results
-- `collaborator-review.md` — Collaborator code review notes
-- `slop-cleanup-report.md` — AI slop cleanup scan results
-- `session-report-2026-02-23.md` — Session work log (docs sync, perf analysis, cross-verification)
-- `session-report-2026-02-25.md` — Session work log (deslop apply, cross-verification, docs update)
-- `security-cross-verification-2026-03-07.md` — Cross-verification of security audit (9 existing items re-confirmed, 6 new findings, 2 HIGH fixed)
-- `plans/` — Architecture design docs and improvement roadmaps
+See `docs/` for security audits, session reports, slop cleanup reports, and architecture plans. Key docs: `ai-skills-usage-guide.md` (AI skills usage), `security-cross-verification-2026-03-07.md` (latest security audit; N-4 token revocation partially resolved).

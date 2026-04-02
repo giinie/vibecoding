@@ -1,5 +1,9 @@
 # Workflow Orchestration
 
+> Planning, execution, and verification rules for AI-assisted development workflows. Subagent usage, task tracking, bug fixing, and code quality standards.
+
+**Session Start**: Read `tasks/lessons.md` and apply relevant rules before proceeding.
+
 ## Planning
 - Enter plan mode for **cross-file changes or architectural decisions** — not every multi-step task
 - Write the plan to `tasks/todo.md` with checkable items before implementing
@@ -37,9 +41,7 @@
 - After a user correction that reveals a **non-obvious or recurring pattern**, append it to `tasks/lessons.md`
 - Format: `[date] Pattern: <what went wrong> → Rule: <how to prevent it>`
 - Keep `tasks/lessons.md` concise — prune entries that no longer apply
-- Promote frequently-violated rules directly into `CLAUDE.md` for permanent enforcement
-
-**Session Start**: Read `tasks/lessons.md` and apply relevant rules before proceeding.
+- Promote frequently-violated rules directly into this file(WORKFLOW_ORCHESTRATION.md) for permanent enforcement
 
 ## Code Quality
 - **Simplicity first**: make every change as minimal and targeted as possible
