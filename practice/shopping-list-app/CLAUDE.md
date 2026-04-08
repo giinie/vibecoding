@@ -8,7 +8,6 @@ Shopping list app with a real-time notification system and JWT authentication. M
 
 > **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`.
 
-<!-- Workflow rules are merged from WORKFLOW_ORCHESTRATION.md at context load time -->
 @WORKFLOW_ORCHESTRATION.md
 
 ## Critical Rules
@@ -27,6 +26,10 @@ Shopping list app with a real-time notification system and JWT authentication. M
 - **MUST** transform boolean columns at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`) and `Boolean(item.is_purchased)` (see `transformItem` in `shoppingItemApi.js`).
 - **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
 - **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
+
+## Toolchain
+
+This project uses **npm** (not pnpm/bun). Respect the existing toolchain per `USER_REQUIREMENTS.md` policy.
 
 ## First-time Setup
 
