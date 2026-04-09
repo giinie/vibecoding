@@ -32,6 +32,7 @@ afterAll(() => {
 });
 
 beforeEach(() => {
+  delete process.env.ANTHROPIC_API_KEY;
   testDb.exec('DELETE FROM shopping_items');
   testDb.exec('DELETE FROM users');
   recommendationService.clearCache();
