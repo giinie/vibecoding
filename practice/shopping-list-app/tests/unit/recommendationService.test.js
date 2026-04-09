@@ -138,11 +138,10 @@ describe('cache', () => {
 
     const first = await recommendationService.generateRecommendations(USER_ID);
 
-    // Manually verify cache was set
+    // Default recommendations should now be cached
     const cached = recommendationService._getCachedRecommendations(USER_ID);
-    // No cache for default recommendations (no API key path doesn't cache)
-    // This is by design — defaults don't need caching
-    expect(first.length).toBeGreaterThan(0);
+    expect(cached).toBeTruthy();
+    expect(cached).toEqual(first);
   });
 
   it('clearCache removes cached data', () => {

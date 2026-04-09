@@ -136,16 +136,20 @@ async function generateRecommendations(userId) {
   const cached = getCachedRecommendations(userId);
   if (cached) return cached;
 
-  // If no API key, return defaults
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return getDefaultRecommendations();
+  // If no API key or SDK not available, return cached defaults
+  if (!process.env.ANTHROPIC_API_KEY || !Anthropic) {
+    const defaults = getDefaultRecommendations();
+    setCachedRecommendations(userId, defaults);
+    return defaults;
   }
 
   const purchaseHistory = getPurchaseHistory(userId);
 
-  // No purchase history — return defaults
+  // No purchase history — return cached defaults
   if (purchaseHistory.length === 0) {
-    return getDefaultRecommendations();
+    const defaults = getDefaultRecommendations();
+    setCachedRecommendations(userId, defaults);
+    return defaults;
   }
 
   try {
@@ -154,7 +158,9 @@ async function generateRecommendations(userId) {
     return recommendations;
   } catch (err) {
     console.error('AI recommendation failed, returning defaults:', err.message);
-    return getDefaultRecommendations();
+    const defaults = getDefaultRecommendations();
+    setCachedRecommendations(userId, defaults);
+    return defaults;
   }
 }
 
