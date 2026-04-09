@@ -19,6 +19,9 @@
 - One focused task per subagent — never multiplex unrelated concerns in a single subagent
 - Do NOT spawn subagents for simple sequential tasks; keep the main context clean instead
 - Prefer 2–3 targeted subagents over large swarms — you cannot effectively observe 10+ agents
+- **Targeted search → direct tools first**: For known file paths, specific patterns, or directory exploration, use Glob/Grep/Read directly. Explore subagents are for broad, open-ended codebase questions only.
+- **Subagent gate failure**: Explore agents may return empty results due to plugin skill gate conflicts (superpowers SUBAGENT-STOP vs EXTREMELY-IMPORTANT). If an agent returns gate-check output instead of actual results, switch to direct tools immediately — do not retry the same agent.
+- **Esc+Esc interrupt vs permission denial**: When a user interrupts a running Agent with Esc double-tap, Claude Code reports `"The user doesn't want to proceed"` — identical to a permission denial. Do not assume a hook or permission system blocked the call. Agent tool calls are auto-approved and do not show approval prompts.
 
 ## Task Execution
 - Track progress by marking items complete in `tasks/todo.md` as you go
