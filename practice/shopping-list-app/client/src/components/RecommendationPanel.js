@@ -30,22 +30,27 @@ function RecommendationItem({ item, onAdd, adding }) {
 export default function RecommendationPanel({ recommendations, loading, error, addingIds, onAdd, onRefresh, onClose }) {
   return (
     <>
-      <div className="rec-overlay" onClick={onClose} />
-      <aside className="rec-panel">
+      <div className="rec-overlay" onClick={onClose} aria-hidden="true" />
+      <aside
+        className="rec-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rec-panel-title"
+      >
         <div className="rec-panel__header">
-          <h2 className="rec-panel__title">AI 추천</h2>
+          <h2 className="rec-panel__title" id="rec-panel-title">AI 추천</h2>
           <div className="rec-panel__actions">
-            <button className="rec-panel__refresh" onClick={onRefresh} disabled={loading}>
+            <button className="rec-panel__refresh" onClick={onRefresh} disabled={loading} aria-label="추천 목록 새로고침">
               새로고침
             </button>
-            <button className="rec-panel__close" onClick={onClose}>
+            <button className="rec-panel__close" onClick={onClose} aria-label="추천 패널 닫기">
               &times;
             </button>
           </div>
         </div>
         <div className="rec-panel__body">
-          {error && <div className="rec-panel__error">{error}</div>}
-          {loading && <div className="rec-panel__loading">추천 목록을 불러오는 중...</div>}
+          {error && <div className="rec-panel__error" role="alert">{error}</div>}
+          {loading && <div className="rec-panel__loading" aria-live="polite">추천 목록을 불러오는 중...</div>}
           {!loading && !error && recommendations.length === 0 && (
             <div className="rec-panel__empty">아직 추천 항목이 없습니다.</div>
           )}
