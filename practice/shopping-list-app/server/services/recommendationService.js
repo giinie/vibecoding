@@ -1,6 +1,13 @@
 const { getDatabase } = require('../db/connection');
 const { LRUCache } = require('lru-cache');
 
+let Anthropic = null;
+try {
+  Anthropic = require('@anthropic-ai/sdk');
+} catch {
+  // SDK not installed — AI recommendations will fall back to defaults
+}
+
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const CACHE_MAX = 100;
 
@@ -61,7 +68,9 @@ function setCachedRecommendations(userId, data) {
 }
 
 async function callClaudeAPI(purchaseHistory) {
-  const Anthropic = require('@anthropic-ai/sdk');
+  if (!Anthropic) {
+    throw new Error('Anthropic SDK not installed');
+  }
   const client = new Anthropic();
 
   const historyText = purchaseHistory
