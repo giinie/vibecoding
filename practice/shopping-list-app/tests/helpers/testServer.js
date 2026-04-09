@@ -47,9 +47,11 @@ function createTestServer() {
   const authRoutes = require('../../server/routes/auth');
   const notificationRoutes = require('../../server/routes/notifications');
   const shoppingItemRoutes = require('../../server/routes/shoppingItems');
+  const recommendationRoutes = require('../../server/routes/recommendations');
   app.use('/api/auth', authRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/shopping-items', shoppingItemRoutes);
+  app.use('/api/recommendations', recommendationRoutes);
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });

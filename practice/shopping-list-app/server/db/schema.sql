@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS shopping_items (
     quantity INTEGER DEFAULT 1,
     unit TEXT,
     is_purchased INTEGER DEFAULT 0,
+    purchased_at TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

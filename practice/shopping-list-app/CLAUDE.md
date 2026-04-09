@@ -59,7 +59,8 @@ npm run seed                   # Seed sample data
 ### Database & Server
 
 - **DB connection singleton**: `getDatabase()` lazily creates the connection. WHY: lazy init allows tests to monkey-patch `connection.js` before the module loads — eager init would prevent injection.
-- **Migration lifecycle**: `migrate()` does NOT close the DB connection — callers manage lifecycle. Only the CLI entry (`require.main === module`) calls `closeDatabase()`. WHY: prevents the server from closing and re-opening the connection on every startup.
+- **Migration lifecycle**: `migrate()` does NOT close the DB connection — callers manage lifecycle. Only the CLI entry (`require.main === module`) calls `closeDatabase()`. WHY: prevents the server from closing and re-opening the connection on every startup. Migration also backfills `purchased_at = created_at` on existing purchased rows when adding the column. WHY: `getPurchaseHistory()` filters by `purchased_at IS NOT NULL`, so without backfill existing purchase history is invisible to recommendations.
+- **Recommendation cache invalidation**: `shoppingItemController.togglePurchased()` calls `clearRecommendationCache(userId)` after toggling. WHY: purchase state changes affect recommendation input; stale cache would serve outdated suggestions for up to 1 hour.
 - **UUID primary keys**: All entities use `uuid` v4, generated server-side. WHY: avoids integer ID enumeration attacks.
 - **UUID_REGEX shared constant**: Defined and exported from `validateUuid.js`. The controller imports it for body-field validation. WHY: single source of truth prevents regex drift.
 - **CORS_ORIGIN**: Defined once in `index.js` and passed to both Express CORS middleware and `initializeSocket()`. WHY: single config point prevents HTTP/WebSocket CORS drift.
@@ -99,6 +100,7 @@ Required in `.env` (server):
 - `CORS_ORIGIN` — Allowed origin (default: `http://localhost:3000`)
 - `TRUST_PROXY` — Set for reverse proxy environments
 - `NODE_ENV` — `development` enables verbose error messages and socket logs
+- `ANTHROPIC_API_KEY` — (optional) Enables AI-powered shopping recommendations via Claude API. If unset, returns hardcoded default recommendations. **MUST be unset in tests** to prevent live API calls.
 
 Optional in `client/.env` (CRA prefix required):
 
@@ -125,14 +127,17 @@ server/models/userModel.js               → User CRUD with bcrypt password hash
 server/models/refreshTokenModel.js       → Refresh token CRUD (create, rotate, revoke family, expire)
 server/db/connection.js                  → Singleton DB connection (lazy-initialized)
 server/db/schema.sql                     → Table definitions (users, notifications, shopping_items, refresh_tokens)
-server/db/migrate.js                     → Runs schema.sql against the DB
+server/db/migrate.js                     → Runs schema.sql against the DB; backfills purchased_at on existing purchased rows
 server/websocket/socketManager.js        → Socket.io init, room management
 server/websocket/socketAuthMiddleware.js → JWT auth for WebSocket connections; exports SOCKET_AUTH_ERRORS, sets socket.tokenExp
 server/websocket/notificationEmitter.js  → Event emitters (new, read, read-all)
 server/routes/shoppingItems.js           → Shopping item CRUD routes (JWT required)
-server/controllers/shoppingItemController.js → Request handling, delegates to shoppingItemModel
+server/controllers/shoppingItemController.js → Request handling, delegates to shoppingItemModel; invalidates recommendation cache on toggle
 server/models/shoppingItemModel.js       → Shopping item data access (better-sqlite3)
 server/websocket/shoppingItemEmitter.js  → Event emitters (new, toggled, deleted)
+server/routes/recommendations.js         → Recommendation routes (JWT required)
+server/controllers/recommendationController.js → getRecommendations request handler
+server/services/recommendationService.js → AI recommendation generation (Anthropic Claude), LRU cache, default fallback
 ```
 
 - **Database**: SQLite via `better-sqlite3` (synchronous API). WAL mode + foreign keys enabled. `notifications` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`. `shopping_items` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_purchased)`. `refresh_tokens` table: indexes on `user_id`, `token`, `family_id`, `expires_at`; columns `is_used` (INTEGER) and `family_id` (UUID) support rotation and replay detection.
@@ -172,6 +177,9 @@ client/src/services/shoppingItemApi.js       → Shopping item API client + tran
 client/src/hooks/useShoppingItems.js         → Shopping item state management (CRUD + real-time, pagination)
 client/src/components/ShoppingItemInput.js   → Add item form (name, quantity, unit)
 client/src/components/ShoppingItemList.js    → Shopping item list with toggle/delete/load-more
+client/src/services/recommendationApi.js     → Recommendation API client + transformRecommendation()
+client/src/hooks/useRecommendations.js       → Recommendation state management (fetch, add, addingIds for double-click prevention)
+client/src/components/RecommendationPanel.js → AI recommendation panel UI (ARIA dialog, WCAG accessible)
 ```
 
 - Access token stored in `localStorage` under `TOKEN_KEY`; refresh token under `REFRESH_TOKEN_KEY` (both constants defined in `authApi.js`). All modules access the access token via `getToken()` — never read `localStorage` directly.
@@ -183,8 +191,8 @@ Integration and unit tests using Jest + Supertest with in-memory SQLite:
 
 - `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()`.
 - `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port.
-- `tests/integration/` — 9 suites: `auth.test.js`, `auth.refresh.test.js` (refresh/logout/replay), `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `shoppingItem.api.test.js`, `shoppingItem.websocket.test.js`, `socketAuth.expiry.test.js` (token expiry disconnect).
-- `tests/unit/` — 4 suites: `notificationApi.test.js`, `notificationTransform.test.js`, `refreshTokenModel.test.js`, `isTokenExpired.test.js`.
+- `tests/integration/` — 10 suites: `auth.test.js`, `auth.refresh.test.js` (refresh/logout/replay), `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `shoppingItem.api.test.js`, `shoppingItem.websocket.test.js`, `socketAuth.expiry.test.js` (token expiry disconnect), `recommendation.api.test.js`.
+- `tests/unit/` — 5 suites: `notificationApi.test.js`, `notificationTransform.test.js`, `refreshTokenModel.test.js`, `isTokenExpired.test.js`, `recommendationService.test.js`.
 
 ### API Endpoints
 
@@ -215,6 +223,12 @@ Shopping Items (`/api/shopping-items`, JWT required, rate-limited 100 req/15min)
 | GET | `/:userId` | List items (query: `limit`, `offset`); ordered unpurchased-first |
 | PATCH | `/:id/toggle` | Toggle purchased status |
 | DELETE | `/:id` | Delete shopping item |
+
+Recommendations (`/api/recommendations`, JWT required, rate-limited 100 req/15min):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/:userId` | Get AI-powered shopping recommendations (5 items); uses LRU cache (max 100, 1h TTL); falls back to defaults if `ANTHROPIC_API_KEY` unset or no purchase history |
 
 ### Documentation (`docs/`)
 

@@ -1,4 +1,5 @@
 const shoppingItemModel = require('../models/shoppingItemModel');
+const { clearCache: clearRecommendationCache } = require('../services/recommendationService');
 const {
   emitNewShoppingItem,
   emitShoppingItemToggled,
@@ -78,6 +79,7 @@ const shoppingItemController = {
       }
 
       emitShoppingItemToggled(req.userId, item);
+      clearRecommendationCache(req.userId);
 
       return res.json(item);
     } catch (err) {

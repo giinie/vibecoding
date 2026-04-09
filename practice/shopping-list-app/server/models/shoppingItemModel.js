@@ -39,7 +39,10 @@ const shoppingItemModel = {
   togglePurchased(id, userId) {
     const db = getDatabase();
     const result = db.prepare(
-      'UPDATE shopping_items SET is_purchased = CASE WHEN is_purchased = 0 THEN 1 ELSE 0 END WHERE id = ? AND user_id = ?'
+      `UPDATE shopping_items
+       SET is_purchased = CASE WHEN is_purchased = 0 THEN 1 ELSE 0 END,
+           purchased_at = CASE WHEN is_purchased = 0 THEN datetime('now') ELSE NULL END
+       WHERE id = ? AND user_id = ?`
     ).run(id, userId);
 
     if (result.changes === 0) return null;

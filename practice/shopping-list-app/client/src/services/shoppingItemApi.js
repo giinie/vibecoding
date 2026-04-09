@@ -8,6 +8,7 @@ export function transformItem(item) {
     quantity: item.quantity,
     unit: item.unit,
     isPurchased: Boolean(item.is_purchased),
+    purchasedAt: item.purchased_at || null,
     createdAt: item.created_at,
   };
 }

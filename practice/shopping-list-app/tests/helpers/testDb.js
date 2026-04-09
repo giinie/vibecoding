@@ -72,6 +72,9 @@ function teardownTestDatabase() {
   delete require.cache[require.resolve('../../server/routes/shoppingItems')];
   delete require.cache[require.resolve('../../server/websocket/shoppingItemEmitter')];
   delete require.cache[require.resolve('../../server/models/refreshTokenModel')];
+  delete require.cache[require.resolve('../../server/services/recommendationService')];
+  delete require.cache[require.resolve('../../server/controllers/recommendationController')];
+  delete require.cache[require.resolve('../../server/routes/recommendations')];
 }
 
 function getTestDatabase() {

@@ -5,6 +5,30 @@
 
 ## [Unreleased]
 
+### 2026-04-09
+
+#### Added
+- **AI 추천 기능** (Anthropic Claude API 연동)
+  - `server/services/recommendationService.js`: `generateRecommendations()` — LRU 캐시(max 100, 1h TTL) 기반 AI 추천 생성; API 키 없거나 구매 이력 없으면 기본 추천 반환
+  - `server/controllers/recommendationController.js`: `getRecommendations()` 요청 처리
+  - `server/routes/recommendations.js`: `GET /api/recommendations/:userId` (JWT 필수)
+  - `client/src/services/recommendationApi.js`: `fetchRecommendations()`, `transformRecommendation()` API 클라이언트
+  - `client/src/hooks/useRecommendations.js`: 추천 상태 관리 + `addingIds` Set으로 중복 추가 방지
+  - `client/src/components/RecommendationPanel.js`: 추천 패널 UI (ARIA `role="dialog"`, `aria-modal`, `aria-labelledby`)
+  - `client/src/styles/recommendations.css`: 추천 패널 BEM 기반 스타일
+  - `server/index.js`: `/api/recommendations` 라우트 등록
+
+#### Fixed
+- `server/db/migrate.js`: 기존 구매 완료 아이템의 `purchased_at` 백필 쿼리 추가 (`ALTER TABLE` 직후 실행)
+- `server/controllers/shoppingItemController.js`: 구매 상태 토글 시 추천 캐시 무효화 (`clearRecommendationCache(userId)`) 추가
+- `server/services/recommendationService.js`: 무제한 Map 캐시 → LRU 캐시 교체 (max 100, 1h TTL)
+- `server/services/recommendationService.js`: AI 응답 필드 레벨 타입 검증 (`validateRecommendation`) 추가
+- `server/services/recommendationService.js`: Anthropic SDK `require`를 최상단 조건부 가드로 이동
+- `server/services/recommendationService.js`: no-API-key / 구매이력 없는 경로에서 기본 추천 캐싱
+- `client/src/hooks/useRecommendations.js`: `addingIds` Set으로 추천 추가 버튼 중복 클릭 방지
+- `client/src/components/RecommendationPanel.js`: ARIA 접근성 속성 추가 (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`)
+- `tests/integration/recommendation.api.test.js`: `ANTHROPIC_API_KEY` 환경변수 테스트 격리 (`beforeEach` 삭제, `afterEach` 복원)
+
 ### 2026-04-02
 
 #### Changed
