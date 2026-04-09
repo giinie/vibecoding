@@ -4,16 +4,20 @@ import NotificationBell from './components/NotificationBell';
 import NotificationList from './components/NotificationList';
 import ShoppingItemInput from './components/ShoppingItemInput';
 import ShoppingItemList from './components/ShoppingItemList';
+import RecommendationPanel from './components/RecommendationPanel';
 import useNotifications from './hooks/useNotifications';
 import useShoppingItems from './hooks/useShoppingItems';
+import useRecommendations from './hooks/useRecommendations';
 import { login, logout } from './services/authApi';
 import { disconnect } from './services/socketService';
 import './App.css';
 import './styles/notifications.css';
 import './styles/shopping.css';
+import './styles/recommendations.css';
 
 function AppContent({ userId, onLogout }) {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
   const {
     notifications,
     unreadCount,
@@ -35,6 +39,14 @@ function AppContent({ userId, onLogout }) {
     toggleItem,
     removeItem,
   } = useShoppingItems(userId);
+  const {
+    recommendations,
+    loading: recLoading,
+    error: recError,
+    addingIds: recAddingIds,
+    refresh: recRefresh,
+    addRecommendedItem,
+  } = useRecommendations(userId);
 
   if (showAllNotifications) {
     return (
@@ -65,6 +77,9 @@ function AppContent({ userId, onLogout }) {
       <header className="app-header">
         <h1 className="app-header__title">쇼핑 리스트</h1>
         <div className="app-header__actions">
+          <button className="rec-toggle" onClick={() => setShowRecommendations(true)} title="AI 추천">
+            &#128161;
+          </button>
           <NotificationBell
             notifications={notifications}
             unreadCount={unreadCount}
@@ -88,6 +103,17 @@ function AppContent({ userId, onLogout }) {
           onDelete={removeItem}
         />
       </main>
+      {showRecommendations && (
+        <RecommendationPanel
+          recommendations={recommendations}
+          loading={recLoading}
+          error={recError}
+          addingIds={recAddingIds}
+          onAdd={addRecommendedItem}
+          onRefresh={recRefresh}
+          onClose={() => setShowRecommendations(false)}
+        />
+      )}
     </div>
   );
 }
