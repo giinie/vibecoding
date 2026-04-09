@@ -37,6 +37,21 @@ function getDefaultRecommendations() {
   }));
 }
 
+const VALID_TYPES = ['replenish', 'complement', 'seasonal'];
+
+function validateRecommendation(item) {
+  if (!item || typeof item !== 'object') return false;
+  if (typeof item.name !== 'string' || item.name.trim().length === 0) return false;
+  if (item.name.length > 200) return false;
+  if (item.quantity !== undefined) {
+    if (typeof item.quantity !== 'number' || !Number.isFinite(item.quantity)) return false;
+    if (item.quantity < 1 || item.quantity > 10000) return false;
+  }
+  if (item.unit !== undefined && item.unit !== null && typeof item.unit !== 'string') return false;
+  if (item.type !== undefined && !VALID_TYPES.includes(item.type)) return false;
+  return true;
+}
+
 function getCachedRecommendations(userId) {
   return cache.get(userId) || null;
 }
@@ -83,15 +98,28 @@ JSON 배열만 반환하고, 다른 텍스트는 포함하지 마세요.`,
     throw new Error('Failed to parse recommendations from AI response');
   }
 
-  const recommendations = JSON.parse(jsonMatch[0]);
-  return recommendations.slice(0, 5).map((item, index) => ({
-    id: `ai-${Date.now()}-${index}`,
-    name: item.name,
-    quantity: item.quantity || 1,
-    unit: item.unit || null,
-    reason: item.reason || '',
-    type: item.type || 'complement',
-  }));
+  const parsed = JSON.parse(jsonMatch[0]);
+  if (!Array.isArray(parsed)) {
+    throw new Error('AI response is not an array');
+  }
+
+  const recommendations = parsed
+    .filter(item => validateRecommendation(item))
+    .slice(0, 5)
+    .map((item, index) => ({
+      id: `ai-${Date.now()}-${index}`,
+      name: String(item.name).trim(),
+      quantity: Number.isFinite(item.quantity) ? item.quantity : 1,
+      unit: typeof item.unit === 'string' ? item.unit : null,
+      reason: typeof item.reason === 'string' ? item.reason : '',
+      type: VALID_TYPES.includes(item.type) ? item.type : 'complement',
+    }));
+
+  if (recommendations.length === 0) {
+    throw new Error('No valid recommendations in AI response');
+  }
+
+  return recommendations;
 }
 
 async function generateRecommendations(userId) {
@@ -138,4 +166,5 @@ module.exports = {
   _cache: cache,
   _setCachedRecommendations: setCachedRecommendations,
   _getCachedRecommendations: getCachedRecommendations,
+  _validateRecommendation: validateRecommendation,
 };

@@ -108,6 +108,28 @@ describe('generateRecommendations', () => {
   });
 });
 
+describe('AI response validation', () => {
+  it('rejects items with non-string name', () => {
+    const { _validateRecommendation } = require('../../server/services/recommendationService');
+    expect(_validateRecommendation({ name: 123, quantity: 1 })).toBe(false);
+    expect(_validateRecommendation({ name: '', quantity: 1 })).toBe(false);
+    expect(_validateRecommendation({ name: null, quantity: 1 })).toBe(false);
+  });
+
+  it('rejects items with invalid quantity', () => {
+    const { _validateRecommendation } = require('../../server/services/recommendationService');
+    expect(_validateRecommendation({ name: 'Milk', quantity: -1 })).toBe(false);
+    expect(_validateRecommendation({ name: 'Milk', quantity: 'abc' })).toBe(false);
+    expect(_validateRecommendation({ name: 'Milk', quantity: 100000 })).toBe(false);
+  });
+
+  it('accepts valid recommendation', () => {
+    const { _validateRecommendation } = require('../../server/services/recommendationService');
+    expect(_validateRecommendation({ name: '우유', quantity: 2, unit: 'L', reason: '필수품', type: 'replenish' })).toBe(true);
+    expect(_validateRecommendation({ name: '계란', quantity: 1 })).toBe(true);
+  });
+});
+
 describe('cache', () => {
   it('returns cached data on second call', async () => {
     seedUser();
