@@ -5,9 +5,14 @@
 
 ## [Unreleased]
 
-### 2026-04-09
+#### Fixed (2026-04-11)
+- `client/src/hooks/useRecommendations.js`: `enabled` 옵션 추가 — 패널 미사용 시 불필요한 API 호출 제거 (`App.js`에서 `{ enabled: showRecommendations }` 전달)
+- `client/src/hooks/useRecommendations.js`: `useRef` 동기 가드(`addingRef`) 추가 — `setAddingIds` 배칭으로 인한 더블클릭 레이스 컨디션 해소
+- `server/controllers/recommendationController.js`: `?refresh=true` 쿼리 파라미터 지원 — 요청 시 해당 userId 캐시 강제 무효화 후 재생성
+- `client/src/services/recommendationApi.js`: `fetchRecommendations(userId, { refresh })` 옵션 추가 — `refresh: true`일 때 `?refresh=true` 쿼리스트링 전달
+- `server/services/recommendationService.js`: lru-cache v5 호환성 수정 — `LRUCache` named import → default import, `ttl` → `maxAge`, `delete` → `del`, `clear` → `reset`
 
-#### Added
+#### Added (2026-04-09)
 - **AI 추천 기능** (Anthropic Claude API 연동)
   - `server/services/recommendationService.js`: `generateRecommendations()` — LRU 캐시(max 100, 1h TTL) 기반 AI 추천 생성; API 키 없거나 구매 이력 없으면 기본 추천 반환
   - `server/controllers/recommendationController.js`: `getRecommendations()` 요청 처리
@@ -18,7 +23,7 @@
   - `client/src/styles/recommendations.css`: 추천 패널 BEM 기반 스타일
   - `server/index.js`: `/api/recommendations` 라우트 등록
 
-#### Fixed
+#### Fixed (2026-04-09)
 - `server/db/migrate.js`: 기존 구매 완료 아이템의 `purchased_at` 백필 쿼리 추가 (`ALTER TABLE` 직후 실행)
 - `server/controllers/shoppingItemController.js`: 구매 상태 토글 시 추천 캐시 무효화 (`clearRecommendationCache(userId)`) 추가
 - `server/services/recommendationService.js`: 무제한 Map 캐시 → LRU 캐시 교체 (max 100, 1h TTL)

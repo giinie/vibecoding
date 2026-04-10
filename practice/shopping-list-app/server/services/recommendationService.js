@@ -1,5 +1,5 @@
 const { getDatabase } = require('../db/connection');
-const { LRUCache } = require('lru-cache');
+const LRU = require('lru-cache');
 
 let Anthropic = null;
 try {
@@ -11,9 +11,9 @@ try {
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const CACHE_MAX = 100;
 
-const cache = new LRUCache({
+const cache = new LRU({
   max: CACHE_MAX,
-  ttl: CACHE_TTL_MS,
+  maxAge: CACHE_TTL_MS,
 });
 
 const DEFAULT_RECOMMENDATIONS = [
@@ -166,9 +166,9 @@ async function generateRecommendations(userId) {
 
 function clearCache(userId) {
   if (userId) {
-    cache.delete(userId);
+    cache.del(userId);
   } else {
-    cache.clear();
+    cache.reset();
   }
 }
 

@@ -404,16 +404,15 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 �
   +-- ai-deep      (심층 분석: 에스컬레이션 단계 Level 1-3)
 ```
 
-`ai-delegate`가 역할 계층과 공통 규칙을 정의하고, 나머지 4개 스킬이 이를 참조하는 **허브-앤-스포크** 구조입니다. 스킬 파일 위치: `~/.claude/skills/ai-*/SKILL.md`
+`ai-delegate`가 역할 계층과 공통 규칙을 정의하고, 나머지 4개 스킬이 이를 참조하는 **허브-앤-스포크** 구조입니다. 스킬 파일 위치: `~/.claude/skills/ai-*/SKILL.md` (global Claude Code config, not in this repo)
 
 ---
 
-<details>
-<summary>검증 이력 (iteration-3, 2026-03-11~12 / Codex Plugin 2026-04-01)</summary>
-
-## 검증 이력 (iteration-3, 2026-03-11~12)
+## 검증 이력
 
 이 가이드의 실행 모델은 iteration-3 E2E 테스트에서 검증되었습니다.
+
+### iteration-3 (2026-03-11~12)
 
 | 날짜 | 테스트 | 결과 | 비고 |
 |------|--------|------|------|
@@ -426,7 +425,7 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 �
 | 2026-03-12 | SKILL.md 동기화 Test B: 병렬 리뷰 | PASS | 1 Team + 2 teammates (codex + gemini) 병렬 성공 |
 | 2026-03-12 | SKILL.md 동기화 Test C: MOG fallback | PASS | CLI 미설치 시 Claude 직접 분석 + `[NOTE]` 메시지 |
 
-### Codex Plugin Integration 검증 (2026-04-01)
+### Codex Plugin Integration (2026-04-01)
 
 | 날짜 | 테스트 | 결과 | 비고 |
 |------|--------|------|------|
@@ -435,5 +434,3 @@ ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 �
 | 2026-04-01 | ai-review 병렬 교차 검증 | PASS | codex-worker(/codex:review) + gemini-worker(adaptive) 병렬 성공, 9개 이슈 탐지 |
 
 상세 결과: `ai-delegate-workspace/` 디렉토리 참조 (`.gitignore` 대상, 로컬에서만 확인 가능)
-
-</details>

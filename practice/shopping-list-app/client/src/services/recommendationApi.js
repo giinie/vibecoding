@@ -11,8 +11,11 @@ export function transformRecommendation(item) {
   };
 }
 
-export async function fetchRecommendations(userId) {
-  const response = await fetchWithAuth(`${BASE_URL}/recommendations/${userId}`);
+export async function fetchRecommendations(userId, { refresh = false } = {}) {
+  const url = refresh
+    ? `${BASE_URL}/recommendations/${userId}?refresh=true`
+    : `${BASE_URL}/recommendations/${userId}`;
+  const response = await fetchWithAuth(url);
   await handleErrorResponse(response, '추천 목록을 불러오는데 실패했습니다.');
   const data = await response.json();
   return {

@@ -46,7 +46,7 @@ function AppContent({ userId, onLogout }) {
     addingIds: recAddingIds,
     refresh: recRefresh,
     addRecommendedItem,
-  } = useRecommendations(userId);
+  } = useRecommendations(userId, { enabled: showRecommendations });
 
   if (showAllNotifications) {
     return (

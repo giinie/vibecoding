@@ -13,6 +13,11 @@ const recommendationController = {
   async getRecommendations(req, res) {
     try {
       const { userId } = req.params;
+
+      if (req.query.refresh === 'true') {
+        recommendationService.clearCache(userId);
+      }
+
       const recommendations = await recommendationService.generateRecommendations(userId);
 
       return res.json({ recommendations });

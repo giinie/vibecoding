@@ -94,6 +94,34 @@ describe('GET /api/recommendations/:userId', () => {
   });
 });
 
+describe('GET /api/recommendations/:userId?refresh=true', () => {
+  it('bypasses cache and returns fresh recommendations', async () => {
+    const token = getTestToken(USER_ID);
+
+    // First request — populates cache
+    const res1 = await agent
+      .get(`/api/recommendations/${USER_ID}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res1.status).toBe(200);
+    const first = res1.body.recommendations;
+
+    // Second request without refresh — should return cached result
+    const res2 = await agent
+      .get(`/api/recommendations/${USER_ID}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res2.status).toBe(200);
+    expect(res2.body.recommendations).toEqual(first);
+
+    // Third request with refresh=true — cache cleared, regenerated
+    const res3 = await agent
+      .get(`/api/recommendations/${USER_ID}?refresh=true`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res3.status).toBe(200);
+    expect(res3.body.recommendations).toBeDefined();
+    expect(Array.isArray(res3.body.recommendations)).toBe(true);
+  });
+});
+
 describe('purchased_at column', () => {
   it('sets purchased_at when toggling to purchased', async () => {
     const token = getTestToken(USER_ID);

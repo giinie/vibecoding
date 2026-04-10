@@ -8,7 +8,7 @@ Shopping list app with a real-time notification system and JWT authentication. M
 
 > **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`.
 
-@WORKFLOW_ORCHESTRATION.md
+> See also: [WORKFLOW_ORCHESTRATION.md](./WORKFLOW_ORCHESTRATION.md) for planning, execution, and verification rules.
 
 ## Critical Rules
 
@@ -60,7 +60,8 @@ npm run seed                   # Seed sample data
 
 - **DB connection singleton**: `getDatabase()` lazily creates the connection. WHY: lazy init allows tests to monkey-patch `connection.js` before the module loads — eager init would prevent injection.
 - **Migration lifecycle**: `migrate()` does NOT close the DB connection — callers manage lifecycle. Only the CLI entry (`require.main === module`) calls `closeDatabase()`. WHY: prevents the server from closing and re-opening the connection on every startup. Migration also backfills `purchased_at = created_at` on existing purchased rows when adding the column. WHY: `getPurchaseHistory()` filters by `purchased_at IS NOT NULL`, so without backfill existing purchase history is invisible to recommendations.
-- **Recommendation cache invalidation**: `shoppingItemController.togglePurchased()` calls `clearRecommendationCache(userId)` after toggling. WHY: purchase state changes affect recommendation input; stale cache would serve outdated suggestions for up to 1 hour.
+- **Recommendation cache invalidation**: `shoppingItemController.togglePurchased()` calls `clearRecommendationCache(userId)` after toggling. WHY: purchase state changes affect recommendation input; stale cache would serve outdated suggestions for up to 1 hour. Client-side `refresh()` from `useRecommendations` passes `?refresh=true` to the server, which calls `clearCache(userId)` before regenerating — allowing manual cache bypass without waiting for TTL expiry.
+- **Recommendation lazy fetch**: `useRecommendations(userId, { enabled })` — the internal `useEffect` only calls `loadRecommendations()` when `enabled` is `true`. `App.js` passes `{ enabled: showRecommendations }` so no Claude API call is made until the user opens the recommendation panel.
 - **UUID primary keys**: All entities use `uuid` v4, generated server-side. WHY: avoids integer ID enumeration attacks.
 - **UUID_REGEX shared constant**: Defined and exported from `validateUuid.js`. The controller imports it for body-field validation. WHY: single source of truth prevents regex drift.
 - **CORS_ORIGIN**: Defined once in `index.js` and passed to both Express CORS middleware and `initializeSocket()`. WHY: single config point prevents HTTP/WebSocket CORS drift.
@@ -140,8 +141,16 @@ server/controllers/recommendationController.js → getRecommendations request ha
 server/services/recommendationService.js → AI recommendation generation (Anthropic Claude), LRU cache, default fallback
 ```
 
-- **Database**: SQLite via `better-sqlite3` (synchronous API). WAL mode + foreign keys enabled. `notifications` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`. `shopping_items` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_purchased)`. `refresh_tokens` table: indexes on `user_id`, `token`, `family_id`, `expires_at`; columns `is_used` (INTEGER) and `family_id` (UUID) support rotation and replay detection.
-- **WebSocket**: JWT auth via `socket.handshake.auth.token` (async auth function — refreshes token before connecting if expired). `socketAuthMiddleware` sets `socket.tokenExp` (JWT `exp` claim). `socketManager` starts a `setTimeout` on connect that auto-disconnects the socket when the access token expires, forcing the client to reconnect with a fresh token. Users join room `user:{userId}`. Notification events: `notification:new`, `notification:read`, `notification:read-all`. Shopping item events: `shoppingItem:new`, `shoppingItem:toggled`, `shoppingItem:deleted`.
+- **Database**: SQLite via `better-sqlite3` (synchronous API). WAL mode + foreign keys enabled.
+  - `notifications`: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`
+  - `shopping_items`: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_purchased)`
+  - `refresh_tokens`: indexes on `user_id`, `token`, `family_id`, `expires_at`; columns `is_used` (INTEGER) and `family_id` (UUID) support rotation and replay detection
+- **WebSocket**: JWT auth via `socket.handshake.auth.token` (async auth function — refreshes token before connecting if expired).
+  - `socketAuthMiddleware` sets `socket.tokenExp` (JWT `exp` claim)
+  - `socketManager` starts a `setTimeout` on connect that auto-disconnects when access token expires, forcing reconnect with fresh token
+  - Users join room `user:{userId}`
+  - Notification events: `notification:new`, `notification:read`, `notification:read-all`
+  - Shopping item events: `shoppingItem:new`, `shoppingItem:toggled`, `shoppingItem:deleted`
 - **WebSocket error codes**: `SOCKET_AUTH_ERRORS.MISSING_TOKEN`, `SOCKET_AUTH_ERRORS.TOKEN_EXPIRED`, `SOCKET_AUTH_ERRORS.INVALID_TOKEN`. `socketService.js` handles: `TOKEN_EXPIRED` → let Socket.io auto-reconnect (auth function will refresh); `MISSING_TOKEN` / `INVALID_TOKEN` → disconnect and call `onAuthFailure()`.
 - **Notification types** (CHECK constraint): `item_added`, `item_purchased`, `list_shared`, `reminder`.
 
@@ -178,7 +187,7 @@ client/src/hooks/useShoppingItems.js         → Shopping item state management 
 client/src/components/ShoppingItemInput.js   → Add item form (name, quantity, unit)
 client/src/components/ShoppingItemList.js    → Shopping item list with toggle/delete/load-more
 client/src/services/recommendationApi.js     → Recommendation API client + transformRecommendation()
-client/src/hooks/useRecommendations.js       → Recommendation state management (fetch, add, addingIds for double-click prevention)
+client/src/hooks/useRecommendations.js       → Recommendation state management (lazy fetch via `enabled` flag, add, `addingIds` + `useRef` sync guard for double-click prevention, `refresh` option with server-side cache bypass)
 client/src/components/RecommendationPanel.js → AI recommendation panel UI (ARIA dialog, WCAG accessible)
 ```
 
@@ -228,8 +237,14 @@ Recommendations (`/api/recommendations`, JWT required, rate-limited 100 req/15mi
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/:userId` | Get AI-powered shopping recommendations (5 items); uses LRU cache (max 100, 1h TTL); falls back to defaults if `ANTHROPIC_API_KEY` unset or no purchase history |
+| GET | `/:userId` | Get AI-powered shopping recommendations (5 items); uses LRU cache (max 100, 1h TTL); falls back to defaults if `ANTHROPIC_API_KEY` unset or no purchase history; pass `?refresh=true` to force cache invalidation |
 
-### Documentation (`docs/`)
+### Key Reference Docs (`docs/`)
 
-See `docs/` for security audits, session reports, slop cleanup reports, and architecture plans. Key docs: `ai-skills-usage-guide.md` (AI skills usage), `security-cross-verification-2026-03-07.md` (latest security audit; N-4 token revocation partially resolved).
+| Document | Purpose |
+|----------|---------|
+| `ai-skills-usage-guide.md` | AI skills (ai-delegate, ai-review 등) 사용 가이드 |
+| `security-cross-verification-2026-03-07.md` | 최신 보안 감사; N-4 token revocation partially resolved |
+| `security-recommendations.md` | 보안 권장사항 및 해결 상태 추적 |
+| `security-audit-followup-report.md` | 보안 감사 후속 조치 보고서 |
+| `slop-cleanup-report.md` | AI slop 정리 보고서 |
