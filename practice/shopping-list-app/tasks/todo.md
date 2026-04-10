@@ -1,6 +1,6 @@
 # Todo
 
-> **Status**: P2 추천 기능 수정 3건 + 문서 동기화 완료 (2026-04-11). 문서 품질 개선 진행 중.
+> **Status**: 전체 완료 (2026-04-11). P2 추천 기능 수정 3건 + 문서 동기화 + 문서 품질 개선 HIGH 8건 + MEDIUM 15건 처리.
 
 ## Codex 리뷰 지적사항 수정 (2026-04-09)
 
@@ -117,3 +117,41 @@
 ### [Group D] docs/ai-skills-usage-guide.md (HIGH #7) — 독립 실행 가능
 
 - [x] D-1. `<details>` HTML 접이식 블록 → 표준 마크다운 `## 검증 이력` 섹션으로 변환 (RAG 파이프라인 가시성 확보)
+
+---
+
+## 문서 품질 개선: enhance-docs MEDIUM 이슈 (2026-04-11)
+
+출처: `/enhance:enhance-docs` 분석 결과, MEDIUM 16건 중 15건 수정 (M12는 C-2에서 기완료)
+
+### CLAUDE.md (M1–M4)
+
+- [x] M1. TL;DR에 `ANTHROPIC_API_KEY must be unset in tests` 추가
+- [x] M2. 추천 관련 bullet 2개를 `### Recommendation Feature` 서브섹션으로 분리
+- [x] M3. `useRecommendations.js` 파일맵 설명 축약 (일관성)
+- [x] M4. Recommendations API 표 셀 축약 + 각주 분리
+
+### CHANGELOG.md (M5–M6)
+
+- [x] M5. 날짜 헤딩 괄호 부제 4개 제거 (일관성)
+- [x] M6. `[0.2.0]` forward reference 축약 `*(superseded in 2026-03-04)*`
+
+### WORKFLOW_ORCHESTRATION.md (M7–M9)
+
+- [x] M7. Session Start를 blockquote에 통합
+- [x] M8. 에이전트 전용 bullet에 `**Operational Notes (Agent)**` 라벨 추가
+- [x] M9. `this file(WORKFLOW_ORCHESTRATION.md)` → `this file` 괄호 제거
+
+### tasks/lessons.md (M10)
+
+- [x] M10. 승격 완료 항목을 한 줄 메모로 축약
+
+### docs/ai-skills-usage-guide.md (M11, M13)
+
+- [x] M11. `[아키텍처](#아키텍처)` 한국어 앵커 → 텍스트 참조로 변경
+- [x] M13. `## 아키텍처` 섹션을 `## 역할 계층` 직후로 이동 (고주의 콘텐츠 상단 배치)
+
+### docs/security-cross-verification-2026-03-07.md (M14–M15)
+
+- [x] M14. N-4 업데이트 노트 blockquote → bold 접두사로 변경
+- [x] M15. 요약 표 아래 각주 추가 (N-4 partially resolved 상세)

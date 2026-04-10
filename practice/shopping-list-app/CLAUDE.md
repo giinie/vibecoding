@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
 
-> **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`.
+> **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`. `ANTHROPIC_API_KEY` **must be unset in tests** to prevent live API calls.
 
 > See also: [WORKFLOW_ORCHESTRATION.md](./WORKFLOW_ORCHESTRATION.md) for planning, execution, and verification rules.
 
@@ -60,12 +60,15 @@ npm run seed                   # Seed sample data
 
 - **DB connection singleton**: `getDatabase()` lazily creates the connection. WHY: lazy init allows tests to monkey-patch `connection.js` before the module loads — eager init would prevent injection.
 - **Migration lifecycle**: `migrate()` does NOT close the DB connection — callers manage lifecycle. Only the CLI entry (`require.main === module`) calls `closeDatabase()`. WHY: prevents the server from closing and re-opening the connection on every startup. Migration also backfills `purchased_at = created_at` on existing purchased rows when adding the column. WHY: `getPurchaseHistory()` filters by `purchased_at IS NOT NULL`, so without backfill existing purchase history is invisible to recommendations.
-- **Recommendation cache invalidation**: `shoppingItemController.togglePurchased()` calls `clearRecommendationCache(userId)` after toggling. WHY: purchase state changes affect recommendation input; stale cache would serve outdated suggestions for up to 1 hour. Client-side `refresh()` from `useRecommendations` passes `?refresh=true` to the server, which calls `clearCache(userId)` before regenerating — allowing manual cache bypass without waiting for TTL expiry.
-- **Recommendation lazy fetch**: `useRecommendations(userId, { enabled })` — the internal `useEffect` only calls `loadRecommendations()` when `enabled` is `true`. `App.js` passes `{ enabled: showRecommendations }` so no Claude API call is made until the user opens the recommendation panel.
 - **UUID primary keys**: All entities use `uuid` v4, generated server-side. WHY: avoids integer ID enumeration attacks.
 - **UUID_REGEX shared constant**: Defined and exported from `validateUuid.js`. The controller imports it for body-field validation. WHY: single source of truth prevents regex drift.
 - **CORS_ORIGIN**: Defined once in `index.js` and passed to both Express CORS middleware and `initializeSocket()`. WHY: single config point prevents HTTP/WebSocket CORS drift.
 - **WebSocket event flow**: Controller actions emit Socket.io events after DB writes. The client `useSocket` hook subscribes for real-time UI updates.
+
+### Recommendation Feature
+
+- **Cache invalidation**: `shoppingItemController.togglePurchased()` calls `clearRecommendationCache(userId)` after toggling. WHY: purchase state changes affect recommendation input; stale cache would serve outdated suggestions for up to 1 hour. Client-side `refresh()` passes `?refresh=true` to the server, which calls `clearCache(userId)` before regenerating.
+- **Lazy fetch**: `useRecommendations(userId, { enabled })` — `useEffect` only calls `loadRecommendations()` when `enabled` is `true`. `App.js` passes `{ enabled: showRecommendations }` so no Claude API call is made until the panel is opened.
 
 ### Auth & Refresh Token System
 
@@ -187,7 +190,7 @@ client/src/hooks/useShoppingItems.js         → Shopping item state management 
 client/src/components/ShoppingItemInput.js   → Add item form (name, quantity, unit)
 client/src/components/ShoppingItemList.js    → Shopping item list with toggle/delete/load-more
 client/src/services/recommendationApi.js     → Recommendation API client + transformRecommendation()
-client/src/hooks/useRecommendations.js       → Recommendation state management (lazy fetch via `enabled` flag, add, `addingIds` + `useRef` sync guard for double-click prevention, `refresh` option with server-side cache bypass)
+client/src/hooks/useRecommendations.js       → Recommendation state management (fetch, add, double-click prevention, refresh)
 client/src/components/RecommendationPanel.js → AI recommendation panel UI (ARIA dialog, WCAG accessible)
 ```
 
@@ -237,7 +240,9 @@ Recommendations (`/api/recommendations`, JWT required, rate-limited 100 req/15mi
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/:userId` | Get AI-powered shopping recommendations (5 items); uses LRU cache (max 100, 1h TTL); falls back to defaults if `ANTHROPIC_API_KEY` unset or no purchase history; pass `?refresh=true` to force cache invalidation |
+| GET | `/:userId` | Get AI-powered shopping recommendations (5 items); uses LRU cache (max 100, 1h TTL); falls back to defaults if `ANTHROPIC_API_KEY` unset or no purchase history* |
+
+> \* Pass `?refresh=true` to force cache invalidation before regeneration.
 
 ### Key Reference Docs (`docs/`)
 

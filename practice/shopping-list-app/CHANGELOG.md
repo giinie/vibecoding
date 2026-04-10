@@ -58,7 +58,7 @@
 #### Refactored
 - `server/controllers/notificationController.js`: 에러 로깅 추가 및 `handleServerError` 인자 개선 (commit abdeb83)
 
-### 2026-03-20 (Refresh Token 시스템 + 클라이언트 자동 갱신)
+### 2026-03-20
 
 #### Added
 - **Refresh Token 인프라** (서버)
@@ -92,7 +92,7 @@
 - `client/src/services/notificationApi.js`, `shoppingItemApi.js`: 모든 인증 API 호출을 `fetchWithAuth()`로 마이그레이션
 - `CLAUDE.md`: 위 변경사항 전체 반영 (JWT auth flow, 토큰 TTL, 새 endpoints, 파일 맵, 테스트 목록)
 
-### 2026-03-12 (ai-* 스킬 Team 실행 모델 + 문서 동기화)
+### 2026-03-12
 
 #### Changed
 - ai-delegate 스킬: Claude Code native Agent Team 기반 CLI 실행 모델로 전면 재설계 (iteration-3)
@@ -106,7 +106,7 @@
 - ai-delegate: 서브에이전트 제한 사항 문서화 (Agent tool 미지원 → inline flag fallback)
 - `ai-delegate-workspace/iteration-3/`: E2E 테스트 결과 (Phase 0, Test A-D)
 
-### 2026-03-11 (프로젝트 설정 및 워크플로 가이드)
+### 2026-03-11
 
 #### Changed
 - `.mcp.json`을 git 추적에서 제거하고 `.mcp.json.example` 템플릿 추가
@@ -115,7 +115,7 @@
 #### Fixed
 - 크로스 모델 리뷰 기반 코드 품질 개선 및 문서 동기화
 
-### 2026-03-09 (보안 강화 및 버그 수정)
+### 2026-03-09
 
 #### Added
 - Shopping Item CRUD 기능
@@ -228,7 +228,7 @@
 ### Changed
 - 인증 방식을 `x-user-id` 헤더 → JWT Bearer 토큰으로 전환
 - WebSocket 인증을 `query.userId` → `auth.token` JWT 검증으로 전환
-- `TOKEN_KEY` 상수 재사용으로 토큰 키 이름 일관성 확보 *(이후 2026-03-04에 `getToken()` 헬퍼로 전환, 모듈이 `localStorage`를 직접 접근하지 않도록 개선)*
+- `TOKEN_KEY` 상수 재사용으로 토큰 키 이름 일관성 확보 *(superseded in 2026-03-04)*
 - 기존 테스트를 JWT 인증 기반으로 전면 수정
 
 ### Security

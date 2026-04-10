@@ -40,6 +40,24 @@ ai-* 스킬은 역할 계층에 따라 프로바이더를 선택합니다:
 
 ---
 
+## 아키텍처
+
+```text
+ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 체인)
+  |
+  +-- /codex plugin ── codex 호출 시 자동 라우팅 (review, rescue)
+  |     (gemini/amp은 기존 adaptive protocol 유지)
+  |
+  +-- ai-research  (원격 검색: gemini 기본, amp Librarian 에스컬레이션)
+  +-- ai-parallel  (배치 처리: 1 Team + 2 teammates 병렬 분담)
+  +-- ai-review    (크로스 리뷰: 1 Team + 2 teammates 병렬, Claude 종합)
+  +-- ai-deep      (심층 분석: 에스컬레이션 단계 Level 1-3)
+```
+
+`ai-delegate`가 역할 계층과 공통 규칙을 정의하고, 나머지 4개 스킬이 이를 참조하는 **허브-앤-스포크** 구조입니다. 스킬 파일 위치: `~/.claude/skills/ai-*/SKILL.md` (global Claude Code config, not in this repo)
+
+---
+
 ## 스킬 목록
 
 | 스킬 | 용도 | 기본 프로바이더 | 호출 예시 |
@@ -221,7 +239,7 @@ Claude Code에서 슬래시 명령으로 호출합니다:
 
 ### ai-delegate: 범용 라우터
 
-모든 ai-* 스킬의 허브 역할 (구조는 [아키텍처](#아키텍처) 참조).
+모든 ai-* 스킬의 허브 역할 (구조는 아키텍처 섹션 참조).
 
 ```bash
 /ai-delegate codex "이 함수의 시간 복잡도를 계산해줘"
@@ -387,24 +405,6 @@ conventions.md의 Effort Levels(공통 규약)에 대응합니다:
 | 크레딧 소진 | 다음 프로바이더 시도 |
 | 타임아웃 | 다음 프로바이더 또는 Claude 직접 처리 |
 | 빈 응답 | 1회 재시도 후 다음 프로바이더 |
-
----
-
-## 아키텍처
-
-```text
-ai-delegate (허브: 역할 계층, Team 실행 모델, 보안 규칙, 폴백 체인)
-  |
-  +-- /codex plugin ── codex 호출 시 자동 라우팅 (review, rescue)
-  |     (gemini/amp은 기존 adaptive protocol 유지)
-  |
-  +-- ai-research  (원격 검색: gemini 기본, amp Librarian 에스컬레이션)
-  +-- ai-parallel  (배치 처리: 1 Team + 2 teammates 병렬 분담)
-  +-- ai-review    (크로스 리뷰: 1 Team + 2 teammates 병렬, Claude 종합)
-  +-- ai-deep      (심층 분석: 에스컬레이션 단계 Level 1-3)
-```
-
-`ai-delegate`가 역할 계층과 공통 규칙을 정의하고, 나머지 4개 스킬이 이를 참조하는 **허브-앤-스포크** 구조입니다. 스킬 파일 위치: `~/.claude/skills/ai-*/SKILL.md` (global Claude Code config, not in this repo)
 
 ---
 

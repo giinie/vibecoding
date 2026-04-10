@@ -58,7 +58,7 @@ This report cross-verifies existing security audit resolutions at the code level
 
 ### N-4: No token revocation mechanism (MEDIUM) — PARTIALLY RESOLVED
 
-> **Update (2026-03-20)**: Refresh token rotation 구현으로 부분 해결. Access token TTL `15m`, refresh token TTL `7d`. 단일 사용 토큰 + family 추적 + 재사용 감지 시 family 전체 폐기. 잔여 과제: access token은 만료까지 서버 측 폐기 불가 (blocklist 미구현).
+**Update (2026-03-20)**: Refresh token rotation 구현으로 부분 해결. Access token TTL `15m`, refresh token TTL `7d`. 단일 사용 토큰 + family 추적 + 재사용 감지 시 family 전체 폐기. 잔여 과제: access token은 만료까지 서버 측 폐기 불가 (blocklist 미구현).
 
 - **Scope**: Entire auth system
 - **Description**: JWT tokens are valid until expiry (default: 7 days). Logout only removes the token from `localStorage` client-side. A stolen token remains usable server-side for its full lifetime.
@@ -90,3 +90,5 @@ This report cross-verifies existing security audit resolutions at the code level
 | LOW | 2 | 0 | 2 |
 
 **HIGH items have been fixed in this session.** MEDIUM and LOW items are documented as recommendations for future iterations.
+
+> \* N-4 partially resolved (2026-03-20): refresh token rotation 구현 완료; access token blocklist 미구현.
