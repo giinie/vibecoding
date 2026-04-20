@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+### 2026-04-20
+
+#### Docs
+- `CLAUDE.md`: Rules / Precedence / Skill Policy 섹션 신규 추가 — `@WORKFLOW_ORCHESTRATION.md` 인라인 참조를 구조화된 섹션으로 전환; 스킬 라우팅 및 보안 리뷰 의무화 정책 명시
+- `WORKFLOW_ORCHESTRATION.md`: 서브에이전트 사용 가이드 확장 — gate failure 감지, Esc+Esc 인터럽트 구분, 직접 도구 우선 규칙 추가; Bug Fixing에 크로스 파일 변경 시 Planning 에스컬레이션 규칙 추가; Code Quality 섹션을 user-scope `CODE_QUALITY.md` 상속 구조로 재작성
+- `tasks/todo.md`: Codex 리뷰 지적사항 및 수정 계획 항목 추가 (commit `312c4ba`)
+- `docs/superpowers/plans/2026-04-09-recommendation-review-fixes.md` 신규: recommendation feature 크로스 코드 리뷰 수정 계획 문서 (commit `0db0b4c`)
+
 ### 2026-04-09
 
 #### Added

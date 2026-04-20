@@ -8,7 +8,24 @@ Shopping list app with a real-time notification system and JWT authentication. M
 
 > **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`.
 
-@WORKFLOW_ORCHESTRATION.md
+## Rules
+
+Workflow orchestration: @WORKFLOW_ORCHESTRATION.md
+
+## Precedence
+
+Rules in this file and @WORKFLOW_ORCHESTRATION.md override user-scope
+delegation defaults (including OMC delegation_rules).
+
+## Skill Policy
+
+Inherits Skill Routing Rules from user scope `~/.claude/CLAUDE.md`. Project-specific additions:
+
+- **Security-related changes** (auth / JWT / refresh token rotation / CORS / rate-limit): Review is MANDATORY via `superpowers:systematic-debugging` or the `oh-my-claudecode:security-reviewer` agent.
+- **New business logic**: The existing integration/unit test suite is solid — prefer `superpowers:test-driven-development` to write tests first.
+- **Code review**: Use `ai-review` (multi-model) or `pr-review-toolkit:review-pr`. `superpowers:requesting-code-review` / `superpowers:receiving-code-review` are disabled in this project (aligned with user-scope default policy).
+- **Doc sync**: When code changes affect API endpoints, environment variables, or the Architecture section, consider updating this CLAUDE.md via `sync-docs:sync-docs`.
+- **DB schema changes**: Must modify `server/db/schema.sql` and `migrate.js` together. Even trivial changes are cross-file, so the Planning rule applies.
 
 ## Critical Rules
 
