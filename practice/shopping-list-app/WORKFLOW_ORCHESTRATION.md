@@ -1,6 +1,8 @@
 # Workflow Orchestration
 
-> **Session Start**: Read `tasks/lessons.md` first. Planning, execution, and verification rules for AI-assisted development workflows below.
+> Planning, execution, and verification rules for AI-assisted development workflows. Subagent usage, task tracking, bug fixing, and code quality standards.
+
+**Session Start**: If `tasks/lessons.md` exists, read it and apply relevant rules before proceeding.
 
 ## Planning
 - Enter plan mode for **cross-file changes or architectural decisions** — not every multi-step task
@@ -18,8 +20,6 @@
 - Do NOT spawn subagents for simple sequential tasks; keep the main context clean instead
 - Prefer 2–3 targeted subagents over large swarms — you cannot effectively observe 10+ agents
 - **Targeted search → direct tools first**: For known file paths, specific patterns, or directory exploration, use Glob/Grep/Read directly. Explore subagents are for broad, open-ended codebase questions only.
-
-**Operational Notes (Agent)**:
 - **Subagent gate failure**: Explore agents may return empty results due to plugin skill gate conflicts (superpowers SUBAGENT-STOP vs EXTREMELY-IMPORTANT). If an agent returns gate-check output instead of actual results, switch to direct tools immediately — do not retry the same agent.
 - **Esc+Esc interrupt vs permission denial**: When a user interrupts a running Agent with Esc double-tap, Claude Code reports `"The user doesn't want to proceed"` — identical to a permission denial. Do not assume a hook or permission system blocked the call. Agent tool calls are auto-approved and do not show approval prompts.
 
@@ -35,7 +35,8 @@
 - Ask yourself: "Would a staff engineer approve this?" before presenting results
 
 ## Bug Fixing
-- When given a bug report: just fix it — no hand-holding required
+- When given a bug report: just fix it — no hand-holding required for localized fixes.
+- If the fix requires cross-file changes or architectural decisions, escalate to Planning first.
 - Point at logs, errors, and failing tests, then resolve them autonomously
 - Fix failing CI tests without waiting to be told how
 - Zero context switching required from the user
@@ -44,16 +45,19 @@
 - After a user correction that reveals a **non-obvious or recurring pattern**, append it to `tasks/lessons.md`
 - Format: `[date] Pattern: <what went wrong> → Rule: <how to prevent it>`
 - Keep `tasks/lessons.md` concise — prune entries that no longer apply
-- Promote frequently-violated rules directly into this file for permanent enforcement
+- Promote frequently-violated rules directly into this file(WORKFLOW_ORCHESTRATION.md) for permanent enforcement
 
 ## Code Quality
-- **Simplicity first**: make every change as minimal and targeted as possible
-- No temporary fixes — find and address root causes, senior developer standards
-- After completing a non-trivial change, ask once: "Is there a more elegant solution?"
-  — If yes and it's low-risk, refactor. If not, ship what works.
-- Do not apply elegance checks to simple, obvious fixes — avoid over-engineering
 
-## Core Principles
-- **Correctness > Elegance > Speed** — in that order
-- Minimal impact: only touch code that must change; avoid introducing unrelated side effects
-- No laziness: incomplete solutions and workarounds are not acceptable
+> Inherits `~/.claude/CODE_QUALITY.md` (Simplicity First + Surgical Changes).
+> This section adds project-specific deltas only — do not restate user-scope rules.
+
+**Priority override**: `Correctness > Simplicity > Elegance > Speed` — inserts Correctness at the top. The remaining order stays compatible with the user-scope "Simplicity First" principle.
+
+- No temporary fixes — find and address root causes
+- After a non-trivial change, ask once about **code just written in this session**:
+  "Is there a more elegant solution?" — If yes and low-risk, refactor. Else ship.
+- Elegance checks do NOT apply to:
+  - Simple, obvious fixes (no over-engineering)
+  - Pre-existing code (follows the user-scope Surgical Changes rule)
+- See also: Bug Fixing

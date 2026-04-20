@@ -5,14 +5,17 @@
 
 ## [Unreleased]
 
-#### Fixed (2026-04-11)
-- `client/src/hooks/useRecommendations.js`: `enabled` 옵션 추가 — 패널 미사용 시 불필요한 API 호출 제거 (`App.js`에서 `{ enabled: showRecommendations }` 전달)
-- `client/src/hooks/useRecommendations.js`: `useRef` 동기 가드(`addingRef`) 추가 — `setAddingIds` 배칭으로 인한 더블클릭 레이스 컨디션 해소
-- `server/controllers/recommendationController.js`: `?refresh=true` 쿼리 파라미터 지원 — 요청 시 해당 userId 캐시 강제 무효화 후 재생성
-- `client/src/services/recommendationApi.js`: `fetchRecommendations(userId, { refresh })` 옵션 추가 — `refresh: true`일 때 `?refresh=true` 쿼리스트링 전달
-- `server/services/recommendationService.js`: lru-cache v5 호환성 수정 — `LRUCache` named import → default import, `ttl` → `maxAge`, `delete` → `del`, `clear` → `reset`
+### 2026-04-20
 
-#### Added (2026-04-09)
+#### Docs
+- `CLAUDE.md`: Rules / Precedence / Skill Policy 섹션 신규 추가 — `@WORKFLOW_ORCHESTRATION.md` 인라인 참조를 구조화된 섹션으로 전환; 스킬 라우팅 및 보안 리뷰 의무화 정책 명시
+- `WORKFLOW_ORCHESTRATION.md`: 서브에이전트 사용 가이드 확장 — gate failure 감지, Esc+Esc 인터럽트 구분, 직접 도구 우선 규칙 추가; Bug Fixing에 크로스 파일 변경 시 Planning 에스컬레이션 규칙 추가; Code Quality 섹션을 user-scope `CODE_QUALITY.md` 상속 구조로 재작성
+- `tasks/todo.md`: Codex 리뷰 지적사항 및 수정 계획 항목 추가 (commit `312c4ba`)
+- `docs/superpowers/plans/2026-04-09-recommendation-review-fixes.md` 신규: recommendation feature 크로스 코드 리뷰 수정 계획 문서 (commit `0db0b4c`)
+
+### 2026-04-09
+
+#### Added
 - **AI 추천 기능** (Anthropic Claude API 연동)
   - `server/services/recommendationService.js`: `generateRecommendations()` — LRU 캐시(max 100, 1h TTL) 기반 AI 추천 생성; API 키 없거나 구매 이력 없으면 기본 추천 반환
   - `server/controllers/recommendationController.js`: `getRecommendations()` 요청 처리
@@ -23,7 +26,7 @@
   - `client/src/styles/recommendations.css`: 추천 패널 BEM 기반 스타일
   - `server/index.js`: `/api/recommendations` 라우트 등록
 
-#### Fixed (2026-04-09)
+#### Fixed
 - `server/db/migrate.js`: 기존 구매 완료 아이템의 `purchased_at` 백필 쿼리 추가 (`ALTER TABLE` 직후 실행)
 - `server/controllers/shoppingItemController.js`: 구매 상태 토글 시 추천 캐시 무효화 (`clearRecommendationCache(userId)`) 추가
 - `server/services/recommendationService.js`: 무제한 Map 캐시 → LRU 캐시 교체 (max 100, 1h TTL)
@@ -58,7 +61,7 @@
 #### Refactored
 - `server/controllers/notificationController.js`: 에러 로깅 추가 및 `handleServerError` 인자 개선 (commit abdeb83)
 
-### 2026-03-20
+### 2026-03-20 (Refresh Token 시스템 + 클라이언트 자동 갱신)
 
 #### Added
 - **Refresh Token 인프라** (서버)
@@ -92,7 +95,7 @@
 - `client/src/services/notificationApi.js`, `shoppingItemApi.js`: 모든 인증 API 호출을 `fetchWithAuth()`로 마이그레이션
 - `CLAUDE.md`: 위 변경사항 전체 반영 (JWT auth flow, 토큰 TTL, 새 endpoints, 파일 맵, 테스트 목록)
 
-### 2026-03-12
+### 2026-03-12 (ai-* 스킬 Team 실행 모델 + 문서 동기화)
 
 #### Changed
 - ai-delegate 스킬: Claude Code native Agent Team 기반 CLI 실행 모델로 전면 재설계 (iteration-3)
@@ -106,7 +109,7 @@
 - ai-delegate: 서브에이전트 제한 사항 문서화 (Agent tool 미지원 → inline flag fallback)
 - `ai-delegate-workspace/iteration-3/`: E2E 테스트 결과 (Phase 0, Test A-D)
 
-### 2026-03-11
+### 2026-03-11 (프로젝트 설정 및 워크플로 가이드)
 
 #### Changed
 - `.mcp.json`을 git 추적에서 제거하고 `.mcp.json.example` 템플릿 추가
@@ -115,7 +118,7 @@
 #### Fixed
 - 크로스 모델 리뷰 기반 코드 품질 개선 및 문서 동기화
 
-### 2026-03-09
+### 2026-03-09 (보안 강화 및 버그 수정)
 
 #### Added
 - Shopping Item CRUD 기능
@@ -228,7 +231,7 @@
 ### Changed
 - 인증 방식을 `x-user-id` 헤더 → JWT Bearer 토큰으로 전환
 - WebSocket 인증을 `query.userId` → `auth.token` JWT 검증으로 전환
-- `TOKEN_KEY` 상수 재사용으로 토큰 키 이름 일관성 확보 *(superseded in 2026-03-04)*
+- `TOKEN_KEY` 상수 재사용으로 토큰 키 이름 일관성 확보 *(이후 2026-03-04에 `getToken()` 헬퍼로 전환, 모듈이 `localStorage`를 직접 접근하지 않도록 개선)*
 - 기존 테스트를 JWT 인증 기반으로 전면 수정
 
 ### Security
