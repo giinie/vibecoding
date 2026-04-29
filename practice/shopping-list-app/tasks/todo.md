@@ -1,6 +1,30 @@
 # Todo
 
-> **Status**: 전체 완료 (2026-04-11). P2 추천 기능 수정 3건 + 문서 동기화 + 문서 품질 개선 HIGH 8건 + MEDIUM 15건 처리.
+> **Status**: 전체 완료 (2026-04-29). P2 추천 기능 수정 3건 + 문서 동기화 + 문서 품질 개선 HIGH 8건 + MEDIUM 15건 처리. 추가로 CLAUDE.md Architecture 섹션 분리 완료.
+
+## CLAUDE.md Architecture 섹션 분리 (2026-04-29)
+
+출처: 프로젝트 스코프 사용자 지침 검토 결과(P2 권고 #1) — CLAUDE.md 253줄 → 컨텍스트 토큰 절감 목적
+
+### 배경
+- `## Architecture` 섹션(파일 트리 + Security 구현 디테일 + API 표 + Tests + Documentation 포인터)이 자주 변하지 않음에도 항상 컨텍스트에 로드됨
+- Critical Rules / Key Patterns(WHY 주석)는 회귀 방지에 직접 관여하므로 CLAUDE.md에 유지
+- 전제: AI 에이전트는 정확한 파일 경로/엔드포인트가 필요할 때만 architecture를 읽으면 됨
+
+### 변경
+- [x] `docs/architecture.md` 신규 작성 — Server file tree + DB/WebSocket 세부사항 + Security + Client file tree + Tests + API Endpoints + Key Reference Docs
+  - 문서 상단에 "When to read / NOT to read" 가이드 명시
+  - 언어: 영어 (사용자 글로벌 지침: AI 에이전트 참조 문서는 영어)
+- [x] `CLAUDE.md`의 `## Architecture` 섹션을 stub으로 교체
+  - 링크 + 4-bullet "At a glance" 요약 (Backend / Frontend / Tests / Security)
+  - 약 124줄 → 약 8줄로 축소
+
+### 검증
+- [x] CLAUDE.md 줄 수 비교 (before: 253 → after: 137, 약 46% 감소)
+- [x] Architecture 참조 깨짐 없음 — `## Architecture` 헤더는 stub으로 유지되어 CLAUDE.md:27의 "Architecture section" 참조 호환
+- [x] CLAUDE.md 정보 손실 없음 — TL;DR / Critical Rules / Key Patterns / Env Vars 모두 그대로, Architecture 디테일만 이전
+- [x] sync-docs 분석 통과 — file tree(13+13), 테스트 카운트(10+5), API 엔드포인트(10) 모두 코드와 100% 일치
+- [x] CHANGELOG.md `[Unreleased]` 섹션에 `### 2026-04-29 > Docs` 항목 추가 (sync-docs 권고 반영)
 
 ## Codex 리뷰 지적사항 수정 (2026-04-09)
 

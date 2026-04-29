@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+### 2026-04-29
+
+#### Docs
+- `docs/architecture.md` 신규 작성 — Server/Client 파일 트리, DB/WebSocket 세부사항, Security 구현, API 엔드포인트 표, 테스트 레이아웃, Key Reference Docs 포함
+- `CLAUDE.md`: `## Architecture` 섹션을 stub으로 교체 (link + 4-bullet At-a-glance 요약). 253줄 → 137줄 (약 46% 감소) — 컨텍스트 토큰 절감 목적
+
 ### 2026-04-20
 
 #### Docs
