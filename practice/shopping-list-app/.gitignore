@@ -7,3 +7,4 @@ server/db/*.db
 .mcp.json
 ai-delegate-workspace/
 temp/
+/.claude/settings.json
