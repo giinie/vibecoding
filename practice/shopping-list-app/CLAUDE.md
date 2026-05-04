@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shopping list app with a real-time notification system and JWT authentication. Monorepo structure with an Express.js backend and a React (CRA) frontend, communicating via REST API and WebSocket (Socket.io).
 
-> **TL;DR Critical Constraints**: `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`.
+> **TL;DR Critical Constraints** (full detail in [Critical Rules](#critical-rules) below): `JWT_SECRET` env required (server exits without it). Tests: call `setupTestDatabase()` before `createTestServer()`. All `userId` params must be UUID v4. SQLite booleans need `Boolean()` transform at API boundary. Use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls (handles token refresh automatically). Access token default TTL is `15m`; refresh token TTL is `7d`.
 
 ## Rules
 
@@ -19,12 +19,12 @@ delegation defaults (including OMC delegation_rules).
 
 ## Skill Policy
 
-Inherits Skill Routing Rules from user scope `~/.claude/CLAUDE.md`. Project-specific additions:
+Inherits Skill Routing Rules and MCP Server Routing from user scope `~/.claude/CLAUDE.md`. Project-specific additions:
 
 - **Security-related changes** (auth / JWT / refresh token rotation / CORS / rate-limit): Review is MANDATORY via `superpowers:systematic-debugging` or the `oh-my-claudecode:security-reviewer` agent.
 - **New business logic**: The existing integration/unit test suite is solid — prefer `superpowers:test-driven-development` to write tests first.
-- **Code review**: Use `ai-review` (multi-model) or `pr-review-toolkit:review-pr`. `superpowers:requesting-code-review` / `superpowers:receiving-code-review` are disabled in this project (aligned with user-scope default policy).
-- **Doc sync**: When code changes affect API endpoints, environment variables, or the Architecture section, consider updating this CLAUDE.md via `sync-docs:sync-docs`.
+- **Code review**: Use `ai-review` (multi-model) or `pr-review-toolkit:review-pr`. For delegated review tasks, prefer the `oh-my-claudecode:code-reviewer` agent (user-scope default). `superpowers:requesting-code-review` / `superpowers:receiving-code-review` are disabled in this project (aligned with user-scope default policy).
+- **Doc sync**: When code changes affect API endpoints, environment variables, the Architecture section, or any "WHY" annotation in Key Patterns, run `sync-docs:sync-docs` to update this CLAUDE.md and `docs/architecture.md`.
 - **DB schema changes**: Must modify `server/db/schema.sql` and `migrate.js` together. Even trivial changes are cross-file, so the Planning rule applies.
 
 ## Critical Rules
@@ -41,14 +41,16 @@ Inherits Skill Routing Rules from user scope `~/.claude/CLAUDE.md`. Project-spec
 
 **API & Data**
 - **MUST** transform boolean columns at the API boundary. SQLite returns integer (0/1), client-side uses boolean. Use `Boolean(notification.is_read)` (see `transformNotification` in `notificationApi.js`) and `Boolean(item.is_purchased)` (see `transformItem` in `shoppingItemApi.js`).
-- **MUST** validate notification create fields: `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
-- **MUST** validate shopping item create fields: `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
+- Notification create field schema (server-side validation enforced): `user_id` (UUID v4), `type` (enum: `item_added`, `item_purchased`, `list_shared`, `reminder`), `title` (max 255 chars), `message` (max 2000 chars), `metadata` (max 10KB JSON).
+- Shopping item create field schema (server-side validation enforced): `name` (non-empty string, max 200 chars), `quantity` (positive integer, max 10000, default 1), `unit` (optional string, max 20 chars).
 
 ## Toolchain
 
 This project uses **npm** (not pnpm/bun). Respect the existing toolchain per `USER_REQUIREMENTS.md` policy.
 
 ## First-time Setup
+
+> **Windows note**: Replace `cp` with `Copy-Item` if using PowerShell.
 
 ```bash
 cp .env.example .env          # Fill in JWT_SECRET (required)
@@ -116,7 +118,7 @@ Required in `.env` (server):
 - `PORT` — Server port (default: `3001`)
 - `CORS_ORIGIN` — Allowed origin (default: `http://localhost:3000`)
 - `TRUST_PROXY` — Set for reverse proxy environments
-- `NODE_ENV` — `development` enables verbose error messages and socket logs
+- `NODE_ENV` — `development` (verbose error messages + socket logs, password output in `seed.js`), `production` (sanitized errors, default deploy mode), `test` (used by Jest harness; disables some warnings)
 - `ANTHROPIC_API_KEY` — (optional) Enables AI-powered shopping recommendations via Claude API. If unset, returns hardcoded default recommendations. **MUST be unset in tests** to prevent live API calls.
 
 Optional in `client/.env` (CRA prefix required):
@@ -133,5 +135,5 @@ Optional in `client/.env` (CRA prefix required):
 **At a glance**:
 - **Backend**: Express.js (port 3001), layered (routes → controllers → models). SQLite via `better-sqlite3` (synchronous, WAL + foreign keys). Socket.io for real-time notifications and shopping item events. JWT HS256 + refresh token rotation.
 - **Frontend**: React 18 (CRA, port 3000), custom hooks pattern. Access/refresh tokens in `localStorage`; all reads via `getToken()`. WebSocket via `SocketContext` + `useSocket`.
-- **Tests**: Jest + Supertest, in-memory SQLite. 10 integration suites + 5 unit suites under `tests/`.
+- **Tests**: Jest + Supertest, in-memory SQLite. Integration + unit suites under `tests/integration/` and `tests/unit/` (see `docs/architecture.md` for current inventory).
 - **Security**: helmet, express-rate-limit, bcryptjs (10 salt rounds), refresh token rotation with family tracking and replay detection.
