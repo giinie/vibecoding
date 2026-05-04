@@ -45,6 +45,8 @@ server/services/recommendationService.js → AI recommendation generation (Anthr
 
 ### Database
 
+> Source of truth: [`server/db/schema.sql`](../server/db/schema.sql). The summary below is for quick reference — verify against `schema.sql` when in doubt.
+
 - SQLite via `better-sqlite3` (synchronous API)
 - WAL mode + foreign keys enabled
 - `notifications` table: composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`
@@ -53,7 +55,7 @@ server/services/recommendationService.js → AI recommendation generation (Anthr
 
 ### WebSocket
 
-- JWT auth via `socket.handshake.auth.token` (async auth function — refreshes token before connecting if expired)
+- JWT auth via `socket.handshake.auth.token` (async auth function — refreshes token before connecting if expired; client-side proactive check via `isTokenExpired()`, see CLAUDE.md Auth & Refresh Token System)
 - `socketAuthMiddleware` sets `socket.tokenExp` (JWT `exp` claim)
 - `socketManager` starts a `setTimeout` on connect that auto-disconnects the socket when the access token expires, forcing the client to reconnect with a fresh token
 - Users join room `user:{userId}`
@@ -122,8 +124,9 @@ Integration and unit tests using Jest + Supertest with in-memory SQLite:
 
 - `tests/helpers/testDb.js` — Creates `:memory:` SQLite DB, monkey-patches connection module. Provides `seedTestUser()`, `getTestToken()`, `clearTestData()`.
 - `tests/helpers/testServer.js` — Spins up Express + Socket.io on random port.
-- `tests/integration/` — 10 suites: `auth.test.js`, `auth.refresh.test.js` (refresh/logout/replay), `notification.api.test.js`, `notification.auth.test.js`, `notification.flow.test.js`, `notification.websocket.test.js`, `shoppingItem.api.test.js`, `shoppingItem.websocket.test.js`, `socketAuth.expiry.test.js` (token expiry disconnect), `recommendation.api.test.js`.
-- `tests/unit/` — 5 suites: `notificationApi.test.js`, `notificationTransform.test.js`, `refreshTokenModel.test.js`, `isTokenExpired.test.js`, `recommendationService.test.js`.
+- `tests/integration/*.test.js` — Integration suites covering auth (register/login/refresh/logout/replay), notifications (CRUD + WebSocket + auth), shopping items (CRUD + WebSocket), socket auth expiry, and recommendations.
+- `tests/unit/*.test.js` — Unit suites for notification API client + transforms, refresh token model, JWT expiry check, and recommendation service.
+- For current suite inventory, list files in `tests/integration/` and `tests/unit/` directly (avoids count drift).
 
 ---
 
@@ -167,13 +170,21 @@ Integration and unit tests using Jest + Supertest with in-memory SQLite:
 
 ## Key Reference Docs
 
+### Evergreen (read when relevant)
+
 | File | Purpose |
 |------|---------|
 | `docs/ai-skills-usage-guide.md` | AI skills usage guide (Korean) |
-| `docs/security-cross-verification-2026-03-07.md` | Latest security audit; N-4 token revocation partially resolved |
-| `docs/security-audit-followup-report.md` | Security audit follow-up |
 | `docs/security-recommendations.md` | Standing security recommendations |
-| `docs/slop-cleanup-report.md` | AI slop cleanup audit |
-| `docs/collaborator-review.md` | Collaborator review notes |
 | `docs/plans/` | Architecture plans and design docs |
 | `docs/superpowers/specs/`, `docs/superpowers/plans/` | Feature specs and execution plans |
+
+### Historical Reports (point-in-time snapshots)
+
+| File | Purpose |
+|------|---------|
+| `docs/security-cross-verification-2026-03-07.md` | Security audit (2026-03-07); N-4 token revocation partially resolved |
+| `docs/security-audit-followup-report.md` | Security audit follow-up |
+| `docs/slop-cleanup-report.md` | AI slop cleanup audit |
+| `docs/collaborator-review.md` | Collaborator review notes |
+| `docs/session-report-*.md` | Session-specific reports |

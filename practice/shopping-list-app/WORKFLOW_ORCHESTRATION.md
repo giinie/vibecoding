@@ -7,11 +7,14 @@
 ## Planning
 - Enter plan mode for **cross-file changes or architectural decisions** — not every multi-step task
 - Write the plan to `tasks/todo.md` with checkable items before implementing
-- **Always check official documentation limitations before designing with platform features (Team, Agent, MCP, etc.)** — especially critical for experimental features
+- **Always check official documentation limitations before designing with platform features (Team, Agent, MCP, etc.)** — especially critical for experimental features. Use `context7` MCP for SDK/framework docs (per user-scope MCP Server Routing).
 - Check in with the user before starting implementation on non-trivial plans
 - If execution goes sideways, STOP and re-plan — do not keep pushing forward
 
 ## Subagent Usage
+
+> Overrides user-scope OMC `<delegation_rules>` (aggressive delegation) — see user-scope `CLAUDE.md` "OMC Delegation Override" section, which explicitly defers to project policy when present.
+
 - Spawn subagents **only when context isolation is explicitly needed**:
   - Parallel independent analysis (e.g., reviewing multiple modules simultaneously)
   - Research/exploration that would pollute the main context window
@@ -32,7 +35,10 @@
 - Never mark a task complete without proving it works
 - Run tests, check logs, and demonstrate correctness before reporting done
 - When relevant, diff behavior between main branch and your changes
-- Ask yourself: "Would a staff engineer approve this?" before presenting results
+- Before presenting results, run a 3-question self-check:
+  1. Tests pass?
+  2. Is the WHY of new code clear (annotation in Key Patterns if applicable)?
+  3. No Critical Rules violated?
 
 ## Bug Fixing
 - When given a bug report: just fix it — no hand-holding required for localized fixes.
@@ -45,7 +51,7 @@
 - After a user correction that reveals a **non-obvious or recurring pattern**, append it to `tasks/lessons.md`
 - Format: `[date] Pattern: <what went wrong> → Rule: <how to prevent it>`
 - Keep `tasks/lessons.md` concise — prune entries that no longer apply
-- Promote frequently-violated rules directly into this file(WORKFLOW_ORCHESTRATION.md) for permanent enforcement
+- Promote rules to this file (WORKFLOW_ORCHESTRATION.md) when violated 3+ times across sessions, OR when a single violation has high blast radius (e.g., security, data loss, irreversible state changes)
 
 ## Code Quality
 

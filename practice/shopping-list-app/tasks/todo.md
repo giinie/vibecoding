@@ -1,6 +1,59 @@
 # Todo
 
-> **Status**: 전체 완료 (2026-04-29). P2 추천 기능 수정 3건 + 문서 동기화 + 문서 품질 개선 HIGH 8건 + MEDIUM 15건 처리. 추가로 CLAUDE.md Architecture 섹션 분리 완료.
+> **Status**: 전체 완료 (2026-05-04). 추가: user-scope + project-scope 지침 문서 정합성 강화 31건 처리.
+
+## 사용자 지침 문서 정합성 강화 (2026-05-04)
+
+출처: 사용자 검토 요청 (user-scope `~/.claude/` + project-scope 지침 문서 일괄 점검)
+
+### user-scope 변경 (`~/.claude/`, this repo 외부 — 별도 백업/dotfiles 관리 권장)
+
+- [x] CLAUDE.md (4 edits High/Medium + 2 edits Low) — `oh-my-claudecode:document-specialist` namespace fix, agent 카탈로그 확장, MCP Server Routing 신규 섹션, auto-memory advisory rule, Code Review 라벨 정리
+- [x] USER_REQUIREMENTS.md (2 edits) — Windows pnpm symlink cross-link 추가, AI 에이전트 문서 영어 작성 대상 명시
+- [x] CODE_QUALITY.md (1 edit) — 200/50줄 임계치 → 원칙형 표현
+- [x] ENV_COMPATIBILITY.md (4 edits) — PowerShell 1급 시민화, `node -e $HOME` 함정 추가, Path separators shell-neutral 재구성, Symlinks nested list 통합
+
+### project-scope 변경 (5개 파일, 18 edits)
+
+- [x] CLAUDE.md (8 edits)
+  - Skill Policy: Skill Routing + MCP Server Routing inheritance 명시
+  - `oh-my-claudecode:code-reviewer` default agent 추가
+  - Critical Rules: 데이터 검증 룰의 `MUST` 절제 (11→8건)
+  - Doc sync 룰 강화 ("consider" → "run")
+  - Windows PowerShell `Copy-Item` 안내
+  - NODE_ENV 가능 값 3종 명시 (development/production/test)
+  - TL;DR에 Critical Rules 하이퍼링크
+  - Architecture 요약의 test count → dynamic 참조 (cross-file 일관성)
+- [x] WORKFLOW_ORCHESTRATION.md (4 edits)
+  - Planning에 `context7` MCP cross-link
+  - Subagent Usage가 user-scope OMC override 메커니즘 참조
+  - Verification 추상 self-check → 3-question 체크리스트
+  - Lesson promotion 정량 기준 (3+ violations OR high blast radius)
+- [x] tasks/lessons.md (1 rewrite) — promoted entry prune, 활성 lesson 0건 안내
+- [x] docs/architecture.md (4 edits)
+  - Database 섹션에 `schema.sql` source-of-truth 링크
+  - WebSocket isTokenExpired() cross-ref → CLAUDE.md
+  - Tests 카운트 → dynamic file pattern 참조 (drift 방지)
+  - Key Reference Docs를 Evergreen vs Historical Reports로 분리
+- [x] .claude/settings.json (1 rewrite)
+  - stale `mcp__chrome-devtools__take_screenshot` 제거 → `mcp__claude-in-chrome__take_screenshot` 교체
+  - 자주 쓰는 npm 명령 5개 권한 추가 (test, run, install, --prefix, npx jest)
+
+### 검증
+
+- [x] 17개 project-scope edit 적용 후 5개 파일 재읽기 — cross-file 정합성 확인
+- [x] cross-scope 정합성 — user-scope 신규 항목(MCP Routing, code-reviewer default)이 project-scope에 정확히 반영
+- [x] 후속 검토 — `tasks/todo.md` (이 항목 추가), `docs/ai-skills-usage-guide.md` (user-scope MCP routing과 이미 정합 → 수정 불필요)
+- [x] `.mcp.json` 검증 — chrome-devtools MCP 미등록 확인 후 settings.json에서 안전 제거
+
+### 후속 권장 사항
+
+- user-scope `~/.claude/` 변경분은 별도 dotfiles 저장소로 백업 권장
+- 다음 세션 시작 시 새 룰들이 자동 적용됨 (별도 reload 불필요)
+
+---
+
+## CLAUDE.md Architecture 섹션 분리 (2026-04-29)
 
 ## CLAUDE.md Architecture 섹션 분리 (2026-04-29)
 
