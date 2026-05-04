@@ -5,6 +5,21 @@
 
 ## [Unreleased]
 
+### 2026-05-04
+
+#### Chore
+- `.gitattributes` 추가 — `* text=auto eol=lf` 적용으로 Windows CRLF 자동 변환 경고 제거. SQLite DB 파일(`*.db`, `*.sqlite`, `*.sqlite3`)과 이미지 바이너리를 binary로 명시 (commit `5a53b49`)
+
+#### Docs
+- `CLAUDE.md`, `WORKFLOW_ORCHESTRATION.md`, `docs/architecture.md`, `tasks/lessons.md`: cross-scope 정합성 강화 18건 (commit `698d64c`)
+  - `CLAUDE.md`: Skill Routing + MCP Server Routing 상속 명시, `oh-my-claudecode:code-reviewer` default agent 명기, `NODE_ENV` 가능 값 3종 명시, Windows `Copy-Item` 안내, TL;DR → Critical Rules 하이퍼링크
+  - `WORKFLOW_ORCHESTRATION.md`: Planning에 context7 MCP cross-link, Subagent Usage의 user-scope OMC override 참조, Verification 3-question 체크리스트, Lesson promotion 정량 기준 추가
+  - `docs/architecture.md`: Database 섹션 schema.sql source-of-truth 링크, WebSocket `isTokenExpired()` cross-ref, Tests 카운트 dynamic 참조, Key Reference Docs를 Evergreen/Historical Reports로 분리
+- `CLAUDE.md`: `/sync-docs` 드리프트 보수 3건
+  - Critical Rules / Auth & Security: fetchWithAuth 마이그레이션 범위에 `recommendationApi.js` 누락 반영, `authApi.js` 제외 사유 명시
+  - Key Patterns / Client API Utilities: "All API service modules" enumeration 동기화
+  - Key Patterns / UI State: `ITEMS_PER_PAGE` 메모를 per-hook 스코프로 명확화 — `useNotifications.js`(5)와 `useShoppingItems.js`(20)이 도메인별로 의도적으로 다른 값을 가짐을 명시
+
 ### 2026-04-29
 
 #### Docs

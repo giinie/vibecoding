@@ -31,7 +31,7 @@ Inherits Skill Routing Rules and MCP Server Routing from user scope `~/.claude/C
 
 **Auth & Security**
 - **MUST** set `JWT_SECRET` in `.env` before starting the server — it exits immediately without it. Tests set `process.env.JWT_SECRET = 'test-jwt-secret-key'` in `setupTestDatabase()`.
-- **MUST** use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls — it transparently retries with a refreshed access token on 401, then throws if refresh fails (which also calls `logout()`). Both `notificationApi.js` and `shoppingItemApi.js` have been migrated to `fetchWithAuth()`.
+- **MUST** use `fetchWithAuth()` from `apiUtils.js` for all authenticated API calls — it transparently retries with a refreshed access token on 401, then throws if refresh fails (which also calls `logout()`). All authenticated API service modules use `fetchWithAuth()` (currently: `notificationApi.js`, `shoppingItemApi.js`, `recommendationApi.js`); `authApi.js` is intentionally excluded since it owns the refresh flow itself.
 - **MUST NOT** log secrets or passwords outside `NODE_ENV === 'development'`. `seed.js` guards password output with this check. Any new seed/debug scripts must follow the same pattern.
 - **MUST** pass `corsOrigin` explicitly to `initializeSocket()`. The function warns if no origin is provided, but falls back to `localhost:3000` for development convenience. Always set `CORS_ORIGIN` in production.
 
@@ -97,7 +97,7 @@ npm run seed                   # Seed sample data
 ### Client API Utilities
 
 - **`fetchWithAuth()`**: Wraps `fetch()` with 401 retry via token refresh. On unrecoverable failure, throws `'인증이 필요합니다.'` — `refreshAccessToken()` already calls `logout()` internally, do not call it again. `handleErrorResponse()` is a legacy fallback for non-`fetchWithAuth` paths. **Prefer `fetchWithAuth()` for new code.**
-- **Shared API utilities**: `BASE_URL`, `authHeaders()`, `handleErrorResponse()`, and `fetchWithAuth()` live in `apiUtils.js`. All API service modules (`notificationApi.js`, `shoppingItemApi.js`) import from here. Use `getToken()` from `authApi.js` for token access — never read `localStorage` directly.
+- **Shared API utilities**: `BASE_URL`, `authHeaders()`, `handleErrorResponse()`, and `fetchWithAuth()` live in `apiUtils.js`. All authenticated API service modules (`notificationApi.js`, `shoppingItemApi.js`, `recommendationApi.js`) import from here. Use `getToken()` from `authApi.js` for token access — never read `localStorage` directly.
 
 ### Testing
 
@@ -107,7 +107,7 @@ npm run seed                   # Seed sample data
 ### UI State
 
 - **useNotifications return values**: Returns `hasUnread` (boolean) derived from `unreadCount`. `NotificationDropdown` and `NotificationList` currently compute `hasUnread` locally via `notifications.some(n => !n.isRead)` — prefer using `hasUnread` from `useNotifications()` when refactoring.
-- **Pagination constant**: `ITEMS_PER_PAGE = 5` in `useNotifications.js`. Hardcoded — do not add a separate constant elsewhere.
+- **Pagination constants**: Each pagination hook owns its own hardcoded `ITEMS_PER_PAGE` — `useNotifications.js` uses `5`, `useShoppingItems.js` uses `20`. Values intentionally differ by domain (notification dropdown vs shopping list view); do NOT extract them to a shared module or duplicate the value within a single hook.
 
 ## Environment Variables
 
