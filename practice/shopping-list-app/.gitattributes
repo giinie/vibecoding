@@ -1,0 +1,13 @@
+# Auto-detect text files and normalize line endings to LF in the repo.
+# Eliminates "LF will be replaced by CRLF" warnings on Windows.
+* text=auto eol=lf
+
+# Binary files — never modify
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
