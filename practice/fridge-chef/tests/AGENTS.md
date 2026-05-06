@@ -4,7 +4,11 @@
 # tests
 
 ## Purpose
-Pytest test suite with 79 tests covering service modules plus session-state helper utilities. Tests use extensive mocking to avoid real API calls and isolated in-memory SQLite for database tests.
+Pytest test suite covering service modules plus session-state helper utilities. Tests use extensive mocking to avoid real API calls and isolated in-memory SQLite for database tests.
+
+Current baseline as of 2026-05-06:
+- `uv run pytest --collect-only -q tests/` collects 79 tests.
+- `uv run pytest tests/ -q` passes 79 tests.
 
 ## Key Files
 
@@ -13,9 +17,9 @@ Pytest test suite with 79 tests covering service modules plus session-state help
 | `test_vision.py` | 8 tests: VisionService, image encoding, ingredient parsing, API error handling |
 | `test_recipe.py` | 16 tests: RecipeService, JSON parsing, recipe validation, sanitization, prompt building |
 | `test_auth.py` | 18 tests: AuthService registration, login, password hashing, profile/preference CRUD, account deletion, validation rules |
-| `test_user.py` | 9 tests: UserRecipeService save/get/update/delete recipes, tagging, sorting |
+| `test_user.py` | 10 tests: UserRecipeService save/get/update/delete recipes, tagging, sorting, rating bounds, duplicate detection |
 | `test_recommendation.py` | 9 tests: RecommendationService stats, cooking calendar, ingredient usage, streak calculation |
-| `test_sharing.py` | 12 tests: SharingService share link generation, QR codes, text formatting, enable/disable sharing, ownership checks |
+| `test_sharing.py` | 13 tests: SharingService share link generation, QR codes, text formatting, enable/disable sharing, ownership checks |
 | `test_session_recipes.py` | 5 tests: guest session recipe serialization, normalization, signature, and deduplication |
 | `__init__.py` | Empty package marker |
 

@@ -21,11 +21,17 @@ Global user preferences belong in `~/.codex/USER_REQUIREMENTS.md`.
 ## Runbook
 - Start app: `uv run streamlit run app.py`
 - Run tests: `uv run pytest tests/ -v`
-- Required env: `.env` with `OPENROUTER_API_KEY`
+- Required for app/API use: `.env` with `OPENROUTER_API_KEY`
+- Tests mock external APIs and should not require real API credentials.
 - Optional env: `APP_BASE_URL` for share links
 - DB initializes automatically on app startup.
 - If `bcrypt` or `pillow` imports break in the shared workspace env, recover with:
   - `uv sync --package fridge-chef --reinstall-package bcrypt --reinstall-package pillow`
+
+## Verification
+- Configured automated verification: `uv run pytest tests/ -v`
+- No project-configured lint or typecheck command is defined as of 2026-05-06.
+- Last verified test count: 79 collected / 79 passing with `uv run pytest tests/ -q` on 2026-05-06.
 
 ## Repository Map
 - `app.py` — Streamlit entry point and session/bootstrap setup

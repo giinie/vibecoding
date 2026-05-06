@@ -19,7 +19,7 @@ Project documentation: step-by-step work reports (Korean) and collaboration prop
 ## For AI Agents
 
 ### Working In This Directory
-- All documents are in Korean
+- Project and historical documents are in Korean. Agent-facing instruction files such as this `AGENTS.md` remain in English.
 - Work reports follow a consistent structure: overview → implementation details → test results → lessons learned
 - These are historical records — do NOT modify unless explicitly asked
 - Use reports to understand WHY certain design decisions were made (e.g., free API model choices, SQLite over PostgreSQL)
