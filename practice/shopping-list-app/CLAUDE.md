@@ -23,7 +23,7 @@ Inherits Skill Routing Rules and MCP Server Routing from user scope `~/.claude/C
 
 - **Security-related changes** (auth / JWT / refresh token rotation / CORS / rate-limit): Review is MANDATORY via `superpowers:systematic-debugging` or the `oh-my-claudecode:security-reviewer` agent.
 - **New business logic**: The existing integration/unit test suite is solid — prefer `superpowers:test-driven-development` to write tests first.
-- **Code review**: Use `ai-review` (multi-model) or `pr-review-toolkit:review-pr`. For delegated review tasks, prefer the `oh-my-claudecode:code-reviewer` agent (user-scope default). `superpowers:requesting-code-review` / `superpowers:receiving-code-review` are disabled in this project (aligned with user-scope default policy).
+- **Code review**: Use `ai-review` (multi-model) or `pr-review-toolkit:review-pr`. For delegated review tasks, prefer the `oh-my-claudecode:code-reviewer` agent (user-scope default). `superpowers:requesting-code-review` / `superpowers:receiving-code-review` are not used unless inside a superpowers workflow context (aligned with `~/.claude/SKILL_ROUTING.md`).
 - **Doc sync**: When code changes affect API endpoints, environment variables, the Architecture section, or any "WHY" annotation in Key Patterns, run `sync-docs:sync-docs` to update this CLAUDE.md and `docs/architecture.md`.
 - **DB schema changes**: Must modify `server/db/schema.sql` and `migrate.js` together. Even trivial changes are cross-file, so the Planning rule applies.
 
