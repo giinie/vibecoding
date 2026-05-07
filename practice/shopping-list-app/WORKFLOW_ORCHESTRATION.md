@@ -10,6 +10,9 @@
 - **Always check official documentation limitations before designing with platform features (Team, Agent, MCP, etc.)** — especially critical for experimental features. Use `context7` MCP for SDK/framework docs (per `~/.claude/MCP_ROUTING.md` §6 Tie-Breaking).
 - Check in with the user before starting implementation on non-trivial plans
 - If execution goes sideways, STOP and re-plan — do not keep pushing forward
+- When the session is in "work without stopping for clarifying questions" mode (set via system reminder or explicit user instruction):
+  - Record the assumption inline in the response, then proceed
+  - **Irreversible actions still require explicit confirmation**: DB schema migrations, network calls with external side effects, destructive shell commands (`rm -rf`, `git reset --hard`, `git push --force`), production deploys, secret/credential changes
 
 ## Subagent Usage
 
